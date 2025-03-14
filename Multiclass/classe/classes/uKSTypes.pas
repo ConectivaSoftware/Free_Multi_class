@@ -24,7 +24,7 @@ type
   //----------------------------------------------------------------------------
   TTipoTef               = (tpTEFELGIN,tpTEFMultiPlus,tpMKMPix,tpVEROSmartTEF,tpSTONESmartTEF,tpTEFVSPAgue,tpTEFEmbed,tpEmbedSmartTEF);
   //----------------------------------------------------------------------------
-  TKSEventoFormaPgto     = (tpKSEventoSolvencia,tpKSEventoNenhum,tpKSEventoVSSPague,tpKSEventoMultiplus,tpKSEventoElgin,tpKSEventoMKMPix,tpKSEventoSmartTEFVero,tpKSEventoWebTEFMercadoPago,tpKSEventoTEFEmbedIT,tpKSEventoSmartTEFEmbedIT);  // Eventos disparados pela forma de pagamento
+  TKSEventoFormaPgto     = (tpKSEventoSolvencia,tpKSEventoNenhum,tpKSEventoVSSPague,tpKSEventoMultiplus,tpKSEventoElgin,tpKSEventoMKMPix,tpKSEventoSmartTEFVero,tpKSEventoTEFEmbedIT,tpKSEventoSmartTEFEmbedIT);  // Eventos disparados pela forma de pagamento
   //----------------------------------------------------------------------------
   TtpTEFImpressao        = (tpTEFImprimirSempre, tpTEFPerguntar , tpTEFNaoImprimir);  // Forma de impressão nos eventos de TEF
   //----------------------------------------------------------------------------

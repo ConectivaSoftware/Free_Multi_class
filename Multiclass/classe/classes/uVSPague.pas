@@ -3621,7 +3621,7 @@ end;
 procedure TVSPagueTEF.SA_SalvarLog(titulo, dado: string);
 begin
    if LSalvarLog then
-      SA_Salva_Arquivo_Incremental(titulo + ' ' + formatdatetime('dd/mm/yyyy hh:mm:ss',now)+#13+dado,GetCurrentDir+'\mkm_log\logTEFVSPague'+formatdatetime('yyyymmdd',date)+'.txt');
+      SA_Salva_Arquivo_Incremental(titulo + ' ' + formatdatetime('dd/mm/yyyy hh:mm:ss',now)+#13+dado,GetCurrentDir+'\TEF_log\logTEFVSPague'+formatdatetime('yyyymmdd',date)+'.txt');
 end;
 
 function TVSPagueTEF.SA_TextoForma(FormaPgto: TtpVSPagueFormaPgto): string;

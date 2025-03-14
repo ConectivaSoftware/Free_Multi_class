@@ -314,7 +314,7 @@ begin
    //---------------------------------------------------------------------------
    for d := 1 to length(PagamentoVenda.Pagamentos) do
       begin
-         if PagamentoVenda.Pagamentos[d-1].Evento in[tpKSEventoVSSPague,tpKSEventoMultiplus,tpKSEventoElgin,tpKSEventoMKMPix,tpKSEventoSmartTEFVero,tpKSEventoWebTEFMercadoPago,tpKSEventoTEFEmbedIT,tpKSEventoSmartTEFEmbedIT] then
+         if PagamentoVenda.Pagamentos[d-1].Evento in[tpKSEventoVSSPague,tpKSEventoMultiplus,tpKSEventoElgin,tpKSEventoMKMPix,tpKSEventoSmartTEFVero,tpKSEventoTEFEmbedIT,tpKSEventoSmartTEFEmbedIT] then
             begin
                //---------------------------------------------------------------
                //   Salvar a transação na tabela TEF

@@ -79,9 +79,8 @@ begin
       4:text := 'TEF ELGIN';
       5:text := 'MKM Pix';
       6:text := 'SMART TEF Vero';
-      7:text := 'WEB TEF Mercado Pago';
-      8:text := 'Embed-IT TEF';
-      9:text := 'Embed-IT Smart Pos';
+      7:text := 'Embed-IT TEF';
+      8:text := 'Embed-IT Smart Pos';
    end;
 end;
 

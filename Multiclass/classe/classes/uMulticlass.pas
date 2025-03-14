@@ -370,7 +370,7 @@ begin
    LConfig.ConfigTEFVSPague.Loja                    := wIni.ReadString('KSConfigTEFVSPague','Loja','');                                 // Código da loja - Fornecido pela VBI na solicitação do TEF
    LConfig.ConfigTEFVSPague.TerminalPDV             := wIni.ReadString('KSConfigTEFVSPague','TerminalPDV','');                          // Código do terminal
    LConfig.ConfigTEFVSPague.ComprovanteCliente      := TtpTEFImpressao(wIni.ReadInteger('KSConfigTEFVSPague','ComprovanteCliente',0));  // Impressão do comprovante do cliente
-   LConfig.ConfigTEFVSPague.ComprovanteCliente      := TtpTEFImpressao(wIni.ReadInteger('KSConfigTEFVSPague','ComprovanteLoja',0));     // Impressão do comprovante do lojista
+   LConfig.ConfigTEFVSPague.ComprovanteLoja         := TtpTEFImpressao(wIni.ReadInteger('KSConfigTEFVSPague','ComprovanteLoja',0));     // Impressão do comprovante do lojista
    LConfig.ConfigTEFVSPague.ComprovanteSimplificado := wIni.ReadBool('KSConfigTEFVSPague','ComprovanteSimplificado',true);         // Forma da impressão do comprovante do lojista
    LConfig.ConfigTEFVSPague.SalvarLog               := wIni.ReadBool('KSConfigTEFVSPague','SalvarLog',true);                       // Habilitar para salvar o LOG
    LConfig.ConfigTEFVSPague.Sequencial              := wIni.ReadInteger('KSConfigTEFVSPague','Sequencial',0); // Numero sequencial para cada transação - Reiniciado a cada dia

@@ -93,7 +93,7 @@ object frmconfig: Tfrmconfig
     Top = 89
     Width = 1045
     Height = 514
-    ActivePage = TabSheet4
+    ActivePage = TabSheet10
     Anchors = [akLeft, akTop, akRight, akBottom]
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
@@ -106,6 +106,10 @@ object frmconfig: Tfrmconfig
       Caption = 'Dados'
       ImageIndex = 2
       OnShow = TabSheet2Show
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object fundoconsultaprod: TShape
         Left = 3
         Top = 35
@@ -334,7 +338,7 @@ object frmconfig: Tfrmconfig
         Left = 183
         Top = 222
         Width = 604
-        Height = 25
+        Height = 22
         Ctl3D = False
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
@@ -351,7 +355,7 @@ object frmconfig: Tfrmconfig
         Left = 183
         Top = 253
         Width = 604
-        Height = 25
+        Height = 22
         Ctl3D = False
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
@@ -522,6 +526,10 @@ object frmconfig: Tfrmconfig
       ImageIndex = 2
       ParentFont = False
       OnShow = TabSheet3Show
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object fundoimpressora: TShape
         Left = 3
         Top = 42
@@ -747,7 +755,7 @@ object frmconfig: Tfrmconfig
         Left = 206
         Top = 54
         Width = 559
-        Height = 26
+        Height = 25
         Color = clInactiveBorder
         Ctl3D = False
         Font.Charset = DEFAULT_CHARSET
@@ -795,7 +803,7 @@ object frmconfig: Tfrmconfig
         Left = 206
         Top = 119
         Width = 75
-        Height = 26
+        Height = 25
         Color = clInactiveBorder
         Ctl3D = False
         Font.Charset = DEFAULT_CHARSET
@@ -938,7 +946,7 @@ object frmconfig: Tfrmconfig
         Left = 413
         Top = 302
         Width = 541
-        Height = 22
+        Height = 25
         Color = clInactiveBorder
         Ctl3D = False
         Font.Charset = DEFAULT_CHARSET
@@ -972,6 +980,10 @@ object frmconfig: Tfrmconfig
         object TabSheet11: TTabSheet
           Caption = 'Tabela de Formas de Pagamento'
           OnShow = TabSheet11Show
+          ExplicitLeft = 0
+          ExplicitTop = 0
+          ExplicitWidth = 0
+          ExplicitHeight = 0
           DesignSize = (
             1001
             431)
@@ -3870,6 +3882,10 @@ object frmconfig: Tfrmconfig
       Caption = 'TEF ELGIN'
       ImageIndex = 4
       OnShow = TabSheet5Show
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object fundoelgin: TShape
         Left = 864
         Top = 88
@@ -9436,6 +9452,10 @@ object frmconfig: Tfrmconfig
       Caption = 'TEF Multiplus'
       ImageIndex = 5
       OnShow = TabSheet6Show
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object fundomultiplus: TShape
         Left = 872
         Top = 96
@@ -13314,7 +13334,7 @@ object frmconfig: Tfrmconfig
         Left = 255
         Top = 175
         Width = 240
-        Height = 31
+        Height = 22
         Color = clInactiveBorder
         Ctl3D = False
         Font.Charset = DEFAULT_CHARSET
@@ -13332,7 +13352,7 @@ object frmconfig: Tfrmconfig
         Left = 255
         Top = 212
         Width = 104
-        Height = 31
+        Height = 22
         Color = clInactiveBorder
         Ctl3D = False
         Font.Charset = DEFAULT_CHARSET
@@ -13350,7 +13370,7 @@ object frmconfig: Tfrmconfig
         Left = 255
         Top = 249
         Width = 104
-        Height = 31
+        Height = 22
         Color = clInactiveBorder
         Ctl3D = False
         Font.Charset = DEFAULT_CHARSET
@@ -13423,6 +13443,10 @@ object frmconfig: Tfrmconfig
       Caption = 'MKM Pix'
       ImageIndex = 6
       OnShow = TabSheet7Show
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object fundomkm: TShape
         Left = 880
         Top = 104
@@ -17302,7 +17326,7 @@ object frmconfig: Tfrmconfig
         Left = 203
         Top = 117
         Width = 240
-        Height = 31
+        Height = 22
         Color = clInactiveBorder
         Ctl3D = False
         Font.Charset = DEFAULT_CHARSET
@@ -17367,6 +17391,10 @@ object frmconfig: Tfrmconfig
       Caption = 'VERO SMART POS'
       ImageIndex = 7
       OnShow = TabSheet8Show
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object fundovero: TShape
         Left = 888
         Top = 112
@@ -21953,7 +21981,7 @@ object frmconfig: Tfrmconfig
         Left = 210
         Top = 101
         Width = 240
-        Height = 31
+        Height = 22
         Color = clInactiveBorder
         Ctl3D = False
         Font.Charset = DEFAULT_CHARSET
@@ -21971,7 +21999,7 @@ object frmconfig: Tfrmconfig
         Left = 210
         Top = 163
         Width = 344
-        Height = 25
+        Height = 22
         Color = clInactiveBorder
         Ctl3D = False
         Font.Charset = ANSI_CHARSET
@@ -22043,7 +22071,7 @@ object frmconfig: Tfrmconfig
         Left = 210
         Top = 135
         Width = 344
-        Height = 25
+        Height = 22
         Color = clInactiveBorder
         Ctl3D = False
         Font.Charset = ANSI_CHARSET
@@ -22062,6 +22090,10 @@ object frmconfig: Tfrmconfig
       Caption = 'TEF Embed IT'
       ImageIndex = 9
       OnShow = TabSheet4Show
+      ExplicitLeft = 0
+      ExplicitTop = 0
+      ExplicitWidth = 0
+      ExplicitHeight = 0
       object fundoembed: TShape
         Left = 912
         Top = 62
@@ -24120,7 +24152,7 @@ object frmconfig: Tfrmconfig
         Left = 248
         Top = 130
         Width = 401
-        Height = 30
+        Height = 22
         Color = clInactiveBorder
         Ctl3D = False
         Font.Charset = DEFAULT_CHARSET
@@ -24138,7 +24170,7 @@ object frmconfig: Tfrmconfig
         Left = 248
         Top = 215
         Width = 401
-        Height = 30
+        Height = 22
         Color = clInactiveBorder
         Ctl3D = False
         Font.Charset = DEFAULT_CHARSET
@@ -24156,7 +24188,7 @@ object frmconfig: Tfrmconfig
         Left = 248
         Top = 248
         Width = 333
-        Height = 30
+        Height = 22
         Color = clInactiveBorder
         Ctl3D = False
         Font.Charset = DEFAULT_CHARSET
@@ -24175,7 +24207,7 @@ object frmconfig: Tfrmconfig
         Left = 248
         Top = 283
         Width = 401
-        Height = 28
+        Height = 22
         Color = clInactiveBorder
         Ctl3D = False
         Font.Charset = ANSI_CHARSET

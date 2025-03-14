@@ -484,7 +484,7 @@ begin
    Result.ConfigTEFVSPague.Loja                    := frmconfig.edtVBILoja.Text;                                     // Código da loja - Fornecido pela VBI na solicitação do TEF
    Result.ConfigTEFVSPague.TerminalPDV             := frmconfig.edtVBIterminal.Text;                                 // Código do terminal
    Result.ConfigTEFVSPague.ComprovanteCliente      := TtpTEFImpressao(frmconfig.cbVBIComprovanteCliente.ItemIndex);  // Impressão do comprovante do cliente
-   Result.ConfigTEFVSPague.ComprovanteCliente      := TtpTEFImpressao(frmconfig.cbVBIComprovanteLoja.ItemIndex);     // Impressão do comprovante do lojista
+   Result.ConfigTEFVSPague.ComprovanteLoja         := TtpTEFImpressao(frmconfig.cbVBIComprovanteLoja.ItemIndex);     // Impressão do comprovante do lojista
    Result.ConfigTEFVSPague.ComprovanteSimplificado := frmconfig.cbVBIComprovanteSimplificado.Checked;                // Forma da impressão do comprovante do lojista
    Result.ConfigTEFVSPague.SalvarLog               := frmconfig.cbVBISalvarLog.Checked;                              // Habilitar para salvar o LOG
    //---------------------------------------------------------------------------
