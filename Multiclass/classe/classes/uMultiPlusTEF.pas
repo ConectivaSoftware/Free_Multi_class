@@ -228,6 +228,10 @@ begin
    //---------------------------------------------------------------------------
    PinPad := TACBrAbecsPinPad.Create(nil);
    //---------------------------------------------------------------------------
+   LRetornoTransacao.ComprovanteLoja := TStringList.Create;
+   LRetornoTransacao.COMPROVANTE     := TStringList.Create;
+   LRetornoTransacao.ComprovanteLoja := TStringList.Create;
+   //---------------------------------------------------------------------------
    inherited;
    //---------------------------------------------------------------------------
 end;

@@ -785,7 +785,7 @@ begin
    //---------------------------------------------------------------------------
    case frmconfig.rgevento.ItemIndex of
       0,1,5:frmconfig.pntefconfig.Visible := false;
-      2,3,4,6,7:frmconfig.pntefconfig.Visible := true;
+      2,3,4,6,7,8:frmconfig.pntefconfig.Visible := true;
    end;
    //---------------------------------------------------------------------------
    case frmconfig.rgevento.ItemIndex of
@@ -1178,6 +1178,8 @@ begin
    edtatalho_forma.Text         := '';
    edtordem.Text                := '9';
    rgevento.ItemIndex           := 0;
+   cbformapgto.ItemIndex        := 0;
+   edtqtdeparcelas.Text         := '';
    //---------------------------------------------------------------------------
    if not NovaForma then  // Está alterando uma forma, carregar os dados da forma para os campos
       begin
