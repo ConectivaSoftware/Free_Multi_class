@@ -3,7 +3,9 @@ unit uMulticlass;
 interface
 
 uses
+   uMoviFluxo,
    PngImage,
+   uEmbedPIX,
    uVSPague,
    uMKMPix,
    uVeroTEF,
@@ -36,6 +38,8 @@ Type
    TMulticlass = class
      Private
         //----------------------------------------------------------------------
+        LTokenConsultaProd : string; // Token para consultar produtos
+        //----------------------------------------------------------------------
         LConfig       : TKSConfig;                 // Variável que armazena em memória as configurações
         LProduto      : TKSRespostaConsultaProd;   // Criar uma variável para receber a consulta
         LPagamento    : TPagamentoVenda;           // Variável para receber o resultado do pagamento
@@ -58,16 +62,20 @@ Type
         function SA_MKMVeroSmartPagar(forma : TPagamentoFoma) : TRetornoPagamentoTEF;
         function SA_MKMPixPagar(forma : TPagamentoFoma)       : TRetornoPagamentoTEF;
         function SA_VBIPagar(forma : TPagamentoFoma)          : TRetornoPagamentoTEF;
+        function SA_EmbedPIXPagar(forma : TPagamentoFoma)     : TRetornoPagamentoTEF;
         //----------------------------------------------------------------------
         function SA_Cancelar_TEF_ELGIN(Cancelamento : TDadosCancelamento)     : boolean;
         function SA_Cancelar_TEF_Multiplus(Cancelamento : TDadosCancelamento) : boolean;
         function SA_MKMVeroSmartCancelar(Cancelamento : TDadosCancelamento)   : boolean;
         function SA_EBEDCancelar(Cancelamento : TDadosCancelamento)           : boolean;
         function SA_VBICancelar(cancelamento : TDadosCancelamento)            : boolean;
+
         //----------------------------------------------------------------------
      Public
         constructor create;
         destructor Destroy(); override;
+        //----------------------------------------------------------------------
+        property TokenConsultaProd : string             read LTokenConsultaProd write LTokenConsultaProd; // Definir Token manualmente
         //----------------------------------------------------------------------
         property Config       : TKSConfig               read LConfig         write LConfig;      // Variável que armazena em memória as configurações
         property Produto      : TKSRespostaConsultaProd read LProduto        write LProduto;     // Criar uma variável para receber a consulta
@@ -85,6 +93,9 @@ Type
         procedure ELGINAdm;
         procedure VSPaguePendencias;
         procedure VSPagueExtrato;
+        //----------------------------------------------------------------------
+        function MOVIFLUXOConsultar(dti,dtf:TDate) : TMoviFluxoExtrato;
+        function MOVIFLUXOListaLojas:TMoviFluxoListaLojas;
         //----------------------------------------------------------------------
         procedure ImprimirTexto(texto:string);
         procedure ImprimirArquivo(arquivo:string);
@@ -134,9 +145,10 @@ begin
    //---------------------------------------------------------------------------
    if not SA_InternetConectada then   // Conferindo se o PC está conectado à internet
       begin
-         LProduto.Status   := stKSFalha;
-         LProduto.Mensagem := 'Sem conexão com a INTERNET.';
-         Result            := LProduto;
+         LProduto.Status    := stKSFalha;
+         LProduto.Consultou := false;
+         LProduto.Mensagem  := 'Sem conexão com a INTERNET.';
+         Result             := LProduto;
          exit;
       end;
    //---------------------------------------------------------------------------
@@ -145,7 +157,8 @@ begin
    consulta.CodigoBarras  := CodigoEan;
    consulta.Consultar;
    LProduto := consulta.RespostaConsulta;
-   Result   := LProduto;
+   LProduto.Consultou := LProduto.Status = stKSOk;
+   Result             := LProduto;
    consulta.Free;
    //---------------------------------------------------------------------------
 end;
@@ -156,6 +169,8 @@ begin
       createdir(getcurrentdir+'\TEF_Log');
    Application.CreateForm(TdmMulticlass, dmMulticlass);  // Criar o Data Module
    SA_CarregarConfig;  // Carregar Configurações
+
+
 end;
 
 procedure TMulticlass.DefinirPagamento(TotalPagar : real);
@@ -221,6 +236,8 @@ end;
 
 function TMulticlass.EnviarArquivo(arquivo: string): boolean;
 begin
+   if LTokenConsultaProd<>'' then
+      LConfig.ConfigServidorProd.ChaveLicenca := LTokenConsultaProd;
    result := SA_Enviar_Arquivo(LConfig.ConfigServidorProd.HostServidor,LConfig.ConfigServidorProd.ChaveLicenca,arquivo);
 end;
 
@@ -240,7 +257,6 @@ begin
          for d := 1 to length(LPagamento.Pagamentos) do
             begin
                //---------------------------------------------------------------
-
                case LPagamento.Pagamentos[d-1].Evento of
                   tpKSEventoSolvencia       : LPagamento.Pagamentos[d-1].RetornoTEF.Status := true;
                   tpKSEventoNenhum          : LPagamento.Pagamentos[d-1].RetornoTEF.Status := true;
@@ -251,6 +267,7 @@ begin
                   tpKSEventoSmartTEFEmbedIT : LPagamento.Pagamentos[d-1].RetornoTEF := SA_EmbedITPagar(LPagamento.Pagamentos[d-1]);      // Transacionar com EMBED IT
                   tpKSEventoSmartTEFVero    : LPagamento.Pagamentos[d-1].RetornoTEF := SA_MKMVeroSmartPagar(LPagamento.Pagamentos[d-1]); // Transacionar com SmartVero POS
                   tpKSEventoMKMPix          : LPagamento.Pagamentos[d-1].RetornoTEF := SA_MKMPixPagar(LPagamento.Pagamentos[d-1]);       // Transacionar com SmartVero POS
+                  tpKSEventoPIXEmbed        : LPagamento.Pagamentos[d-1].RetornoTEF := SA_EmbedPIXPagar(LPagamento.Pagamentos[d-1]);     // Transacionar com SmartVero POS
                end;
                //---------------------------------------------------------------
                if not(LPagamento.Pagamentos[d-1].RetornoTEF.Status) then
@@ -285,6 +302,37 @@ procedure TMulticlass.ImprimirTexto(texto: string);
 begin
    //---------------------------------------------------------------------------
    SA_ImprimirTexto(texto,Config.ConfigImpressora);
+end;
+
+function TMulticlass.MOVIFLUXOConsultar(dti,dtf:TDate) : TMoviFluxoExtrato;
+var
+   MoviFluxo : TMoviFluxo;
+begin
+   MoviFluxo             := TMoviFluxo.Create;
+   MoviFluxo.Token       := LConfig.ConfigMovifluxo.Token;
+   MoviFluxo.Homologacao := LConfig.ConfigMovifluxo.Homologacao;
+   MoviFluxo.SalvarLOG   := LConfig.ConfigMovifluxo.SalvarLOG;
+   MoviFluxo.UserID      := LConfig.ConfigMovifluxo.IDCliente;
+   MoviFluxo.Dti         := dti;
+   MoviFluxo.Dtf         := dtf;
+   MoviFluxo.NSU         := '';
+   MoviFluxo.Consultar;  // Consultar a conciliação
+   Result := MoviFluxo.Conciliacao;
+   MoviFluxo.Free;
+   //---------------------------------------------------------------------------
+end;
+
+function TMulticlass.MOVIFLUXOListaLojas: TMoviFluxoListaLojas;
+var
+   MoviFluxo : TMoviFluxo;
+begin
+   MoviFluxo             := TMoviFluxo.Create;
+   MoviFluxo.Token       := LConfig.ConfigMovifluxo.Token;
+   MoviFluxo.Homologacao := LConfig.ConfigMovifluxo.Homologacao;
+   MoviFluxo.SalvarLOG   := LConfig.ConfigMovifluxo.SalvarLOG;
+   Result := MoviFluxo.SA_ListarLojas;  // Consultar a lista de lojas
+   MoviFluxo.Free;
+   //---------------------------------------------------------------------------
 end;
 
 function TMulticlass.SA_Cancelar_TEF_ELGIN(Cancelamento : TDadosCancelamento):boolean;
@@ -343,6 +391,13 @@ procedure TMulticlass.SA_CarregarConfig;
 var
   wIni : TIniFile;
 begin
+   //---------------------------------------------------------------------------
+   //   Definindo Default
+   //---------------------------------------------------------------------------
+   LConfig.ConfigServidorProd.HostServidor := 'http://www.mkmservicos.com.br'; // Host aonde a consulta será feita = http://www.mkmservicos.com.br
+   //---------------------------------------------------------------------------
+   if not FileExists(GetCurrentDir+'\config.ini') then
+      exit;
    //---------------------------------------------------------------------------
    wIni                             := TIniFile.Create(GetCurrentDir+'\config.ini');
    LConfig.ConfigEmitente           := TEmit.create;
@@ -421,6 +476,11 @@ begin
    LConfig.ConfigEmbedIT.Username           := wIni.ReadString('KSConfigEmbedIT','Username','');                            // gerado pelo time de integração
    LConfig.ConfigEmbedIT.password           := wIni.ReadString('KSConfigEmbedIT','password','');                            // gerado pelo time de integração
    LConfig.ConfigEmbedIT.DeviceSerial       := wIni.ReadString('KSConfigEmbedIT','DeviceSerial','');;                       // obtido através da aplicação PDV Mobi no POS
+   LConfig.ConfigEmbedIT.CNPJPIX            := wIni.ReadString('KSConfigEmbedIT','CNPJPIX','');                            //
+   LConfig.ConfigEmbedIT.ChavePIX           := wIni.ReadString('KSConfigEmbedIT','ChavePIX','');                            //
+   LConfig.ConfigEmbedIT.UsernamePIX        := wIni.ReadString('KSConfigEmbedIT','UserNamePIX','');                            //
+   LConfig.ConfigEmbedIT.PasswordPIX        := wIni.ReadString('KSConfigEmbedIT','PasswordPIX','');                            //
+   LConfig.ConfigEmbedIT.AmbientePIX        := TEMBEDAmbiente(wIni.ReadInteger('KSConfigEmbedIT','AmbientePIX',0));                            //
    LConfig.ConfigEmbedIT.ComprovanteCliente := TtpTEFImpressao(wIni.ReadInteger('KSConfigEmbedIT','ComprovanteCliente',0)); // Impressão do comprovante do cliente
    LConfig.ConfigEmbedIT.ComprovanteLoja    := TtpTEFImpressao(wIni.ReadInteger('KSConfigEmbedIT','ComprovanteLoja',0));    // Impressão do comprovante do lojista
    LConfig.ConfigEmbedIT.SalvarLog          := wIni.ReadBool('KSConfigEmbedIT','SalvarLog',true);                           // Habilitar para salvar o LOG
@@ -447,6 +507,12 @@ begin
    LConfig.ConfigEmitente.EnderEmit.fone               := wIni.ReadString('KSConfigEmitente','fone','');
    LConfig.ConfigEmitente.IE                           := wIni.ReadString('KSConfigEmitente','IE','');
    //---------------------------------------------------------------------------
+   Lconfig.ConfigMovifluxo.Token                       := wIni.ReadString('KSConfigMovifluxo','Token','');
+   Lconfig.ConfigMovifluxo.IDCliente                   := wIni.ReadString('KSConfigMovifluxo','IDCliente','');
+   Lconfig.ConfigMovifluxo.Homologacao                 := wIni.ReadBool('KSConfigMovifluxo','Homologacao',false);
+   Lconfig.ConfigMovifluxo.SalvarLOG                   := wIni.ReadBool('KSConfigMovifluxo','SalvarLOG',true);
+   //---------------------------------------------------------------------------
+
 end;
 
 
@@ -493,7 +559,6 @@ end;
 function TMulticlass.SA_CriarClasseMultiplus: TMultiPlusTEF;
 begin
    //---------------------------------------------------------------------------
-
    Result                             := TMultiPlusTEF.Create;
    Result.IComprovanteCliente         := LConfig.ConfigTEFEMultiplus.ComprovanteCliente;
    Result.IComprovanteLoja            := LConfig.ConfigTEFEMultiplus.ComprovanteLoja;
@@ -646,6 +711,44 @@ begin
    Result.ComprovanteRed  := EMBED.RespostaTEF.Resultado.ComprovanteLoja;
    //---------------------------------------------------------------------------
    EMBED.Free;
+   //---------------------------------------------------------------------------
+
+end;
+
+function TMulticlass.SA_EmbedPIXPagar(forma: TPagamentoFoma): TRetornoPagamentoTEF;
+var
+   PIXEmbed : TEmbedPIX;
+begin
+   //---------------------------------------------------------------------------
+   PIXEmbed := TEmbedPIX.create;
+   //---------------------------------------------------------------------------
+   PIXEmbed.Impressora              := LConfig.ConfigImpressora;
+   PIXEmbed.ConfigPinPad            := LConfig.ConfigPinPad;
+   PIXEmbed.Emitente                := LConfig.ConfigEmitente;
+   PIXEmbed.ConfigImpressaoViaCLI   := LConfig.ConfigEmbedIT.ComprovanteCliente;
+   PIXEmbed.ConfigImpressaoViaLJ    := LConfig.ConfigEmbedIT.ComprovanteLoja;;
+   PIXEmbed.SalvarLog               := LConfig.ConfigEmbedIT.SalvarLog;
+   //---------------------------------------------------------------------------
+   PIXEmbed.Forma := forma.Forma;
+   PIXEmbed.Valor := forma.Valor;
+   PIXEmbed.Tempo := 360;
+   //---------------------------------------------------------------------------
+   PIXEmbed.ConfigCNPJ     := LConfig.ConfigEmbedIT.CNPJPIX;
+   PIXEmbed.ConfigChave    := LConfig.ConfigEmbedIT.ChavePIX;
+   PIXEmbed.ConfigUsername := LConfig.ConfigEmbedIT.UsernamePIX;
+   PIXEmbed.ConfigPassword := LConfig.ConfigEmbedIT.PasswordPIX;
+   PIXEmbed.ConfigAmbiente := LConfig.ConfigEmbedIT.AmbientePIX;
+   //---------------------------------------------------------------------------
+   PIXEmbed.SA_EfetuarPagamento;
+   while PIXEmbed.Executando do
+      begin
+         sleep(10);
+         Application.ProcessMessages;
+      end;
+   //---------------------------------------------------------------------------
+   Result.Status := PIXEmbed.RetornoPIX.E2E<>'';
+   //---------------------------------------------------------------------------
+   PIXEmbed.Destroy;
    //---------------------------------------------------------------------------
 
 end;

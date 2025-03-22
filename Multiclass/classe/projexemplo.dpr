@@ -25,7 +25,10 @@ uses
   urelatorio in 'urelatorio.pas' {frmrelatorio},
   uVSPague in 'classes\uVSPague.pas',
   ucpfcupom in 'classes\ucpfcupom.pas' {frmcpfcupom},
-  uenviarXML in 'uenviarXML.pas' {frmenviarXML};
+  uenviarXML in 'uenviarXML.pas' {frmenviarXML},
+  uEmbedPIX in 'classes\uEmbedPIX.pas',
+  uMoviFluxo in 'classes\uMoviFluxo.pas',
+  uconciliacao in 'uconciliacao.pas' {frmconciliacao};
 
 {$R *.res}
 
@@ -33,6 +36,7 @@ begin
   Application.Initialize;
   Application.MainFormOnTaskbar := True;
   Application.CreateForm(Tfrmprinc, frmprinc);
-  Application.CreateForm(TfrmenviarXML, frmenviarXML);
+  //  Application.CreateForm(TfrmenviarXML, frmenviarXML);
+//  Application.CreateForm(Tfrmconciliacao, frmconciliacao);
   Application.Run;
 end.

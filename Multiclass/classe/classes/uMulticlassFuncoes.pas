@@ -38,10 +38,20 @@ function SA_ConfigurarPinPad(ConfigPinPad:TKSConfigPinPad):TACBrAbecsPinPad;
 function SA_PINPAD_MostrarLogo(ConfigPinpad : TKSConfigPinPad):boolean;
 //------------------------------------------------------------------------------
 function SA_Enviar_Arquivo(host_api,chave,arquivo:string):boolean;
+procedure SA_SalvarLog(titulo, dado,arquivo: string;LSalvarLog : boolean = true);
 //------------------------------------------------------------------------------
 implementation
 
-
+//------------------------------------------------------------------------------
+//   Salvar LOG
+//------------------------------------------------------------------------------
+procedure SA_SalvarLog(titulo, dado,arquivo: string;LSalvarLog : boolean = true);
+begin
+   if LSalvarLog then
+      SA_Salva_Arquivo_Incremental(titulo + ' ' +
+                                   formatdatetime('dd/mm/yyyy hh:mm:ss',now)+#13+dado,
+                                   arquivo);
+end;
 //------------------------------------------------------------------------------
 //   Configurar o PINPAD
 //------------------------------------------------------------------------------

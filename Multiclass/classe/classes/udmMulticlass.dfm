@@ -52,7 +52,7 @@ object dmMulticlass: TdmMulticlass
     Aggregates = <>
     Params = <>
     Left = 48
-    Top = 104
+    Top = 112
     object tblpgtocodigo: TIntegerField
       FieldName = 'codigo'
     end
@@ -84,6 +84,6 @@ object dmMulticlass: TdmMulticlass
     AutoEdit = False
     DataSet = tblpgto
     Left = 89
-    Top = 104
+    Top = 112
   end
 end

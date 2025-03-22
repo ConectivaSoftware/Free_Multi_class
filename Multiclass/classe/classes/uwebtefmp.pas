@@ -540,6 +540,7 @@ begin
               tpTEFVSPAgue          : logomp.Picture.LoadFromFile(GetCurrentDir+'\icones\VSPague.bmp');     // VBI VSPague
               tpTEFEmbed            : logomp.Picture.LoadFromFile(GetCurrentDir+'\icones\EmbedIT.bmp');     // EMBED IT
               tpEmbedSmartTEF       : logomp.Picture.LoadFromFile(GetCurrentDir+'\icones\EmbedIT.bmp');     // EMBED IT
+              tpEmbedITPIX          : logomp.Picture.LoadFromFile(GetCurrentDir+'\icones\PIXEmbedIT.bmp');  // PIX EMBED IT
             end;
          except
 
@@ -554,6 +555,7 @@ begin
            tpTEFVSPAgue        : titulo.Caption := 'VBI VSPague';        // VBI VSPague
            tpTEFEmbed          : titulo.Caption := 'Embed-IT';           // EMBED-IT
            tpEmbedSmartTEF     : titulo.Caption := 'Embed-IT Smart TEF'; // EMBED-IT Smart
+          tpEmbedITPIX         : titulo.Caption := 'Embed-IT PIX';       // EMBED-IT PIX
          end;
          frmwebtef.Repaint;
       end;

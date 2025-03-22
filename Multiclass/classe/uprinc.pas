@@ -88,6 +88,43 @@ type
     tblvendancm: TStringField;
     tblvendacest: TStringField;
     tbltefformatef: TIntegerField;
+    dtsprevisao: TDataSource;
+    tblprevisao: TClientDataSet;
+    tblprevisaoadquirente: TStringField;
+    tblprevisaocodigo_pedido: TStringField;
+    tblprevisaonsu: TStringField;
+    tblprevisaomeio_pagamento: TStringField;
+    tblprevisaoproduto: TStringField;
+    tblprevisaoestabelecimento: TStringField;
+    tblprevisaodata_venda: TDateField;
+    tblprevisaodata_prevista_pagamento: TDateField;
+    tblprevisaovalor_bruto_transacao: TFloatField;
+    tblprevisaovalor_bruto_parcela: TFloatField;
+    tblprevisaovalor_liquido_parcela: TFloatField;
+    tblprevisaotaxa_adquirencia: TFloatField;
+    tblprevisaobandeira: TStringField;
+    tblprevisaoparcela: TIntegerField;
+    tblprevisaoplano: TIntegerField;
+    dtsliquidacao: TDataSource;
+    tblliquidacao: TClientDataSet;
+    tblliquidacaoadquirente: TStringField;
+    tblliquidacaocodigo_pedido: TStringField;
+    tblliquidacaonsu: TStringField;
+    tblliquidacaomeio_pagamento: TStringField;
+    tblliquidacaobandeira: TStringField;
+    tblliquidacaoproduto: TStringField;
+    tblliquidacaoestabelecimento: TStringField;
+    tblliquidacaodata_pagamento: TDateField;
+    tblliquidacaovalor_bruto_transacao: TFloatField;
+    tblliquidacaovalor_bruto_parcela: TFloatField;
+    tblliquidacaovalor_liquido_parcela: TFloatField;
+    tblliquidacaotaxa_administrativa: TFloatField;
+    tblliquidacaoparcela: TIntegerField;
+    tblliquidacaoplano: TIntegerField;
+    tblliquidacaocodigo_banco: TStringField;
+    tblliquidacaonome_banco: TStringField;
+    tblliquidacaoagencia: TStringField;
+    tblliquidacaoconta_corrente_poupanca: TStringField;
     procedure FormActivate(Sender: TObject);
     procedure edtdigitarKeyPress(Sender: TObject; var Key: Char);
     procedure btreiniciarvendaClick(Sender: TObject);
@@ -121,13 +158,40 @@ implementation
 uses uprecoprod, uutil;
 
 //------------------------------------------------------------------------------
+//   Função para pegar a versão do sistema
+//------------------------------------------------------------------------------
+function SA_Versao_Software : string;
+var
+   Exe: string;
+   Size, Handle: DWORD;
+   Buffer: array of Byte;
+   FixedPtr: PVSFixedFileInfo;
+begin
+   Exe := ParamStr(0);
+   Size := GetFileVersionInfoSize(PChar(Exe), Handle);
+   if Size = 0 then
+      RaiseLastOSError;
+   SetLength(Buffer, Size);
+   if not GetFileVersionInfo(PChar(Exe), Handle, Size, Buffer) then
+      RaiseLastOSError;
+   if not VerQueryValue(Buffer, '\', Pointer(FixedPtr), Size) then
+      RaiseLastOSError;
+   Result := Format('%d.%d.%d.%d',
+     [LongRec(FixedPtr.dwFileVersionMS).Hi,  //major
+      LongRec(FixedPtr.dwFileVersionMS).Lo,  //minor
+      LongRec(FixedPtr.dwFileVersionLS).Hi,  //release
+      LongRec(FixedPtr.dwFileVersionLS).Lo]) //build
+end;
+//------------------------------------------------------------------------------
+
+//------------------------------------------------------------------------------
 //   Função para procurar o produto na tabela local
 //------------------------------------------------------------------------------
 function SA_BuscaProd(busca:string;preco:real = 0):TKSRespostaConsultaProd;
 var
-   Cadastrar  : boolean;   // Para sinalizar que a busca foi encontrada no servidor, e cadastrar o produto localmente
-   achou      : boolean;           // Flag para sinalizar se o produto foi encontrado na base local ou não
-   Multiclass : TMulticlass;       // Classe para operar a consulta
+   Cadastrar  : boolean;     // Para sinalizar que a busca foi encontrada no servidor, e cadastrar o produto localmente
+   achou      : boolean;     // Flag para sinalizar se o produto foi encontrado na base local ou não
+   Multiclass : TMulticlass; // Classe para operar a consulta
 begin
    //---------------------------------------------------------------------------
    Result.Status   := stKSFalha;
@@ -447,6 +511,7 @@ begin
          tblvenda.EmptyDataSet;
          edtdigitar.SetFocus;
       end;
+   frmprinc.Caption := 'Free Multiclass v. '+SA_Versao_Software;
 end;
 
 procedure Tfrmprinc.FormClose(Sender: TObject; var Action: TCloseAction);
@@ -457,9 +522,11 @@ end;
 procedure Tfrmprinc.FormCreate(Sender: TObject);
 begin
    //---------------------------------------------------------------------------
-   tblvenda.CreateDataSet;   // Inicializando a tabela de vendas - Produtos da tela
-   tbltef.CreateDataSet;     // Inicializando a tabela para armazenar as transações TEF
-   tblprod.CreateDataSet;    // Inicializando a tabela para armazenar as prodtos da consulta
+   tblvenda.CreateDataSet;      // Inicializando a tabela de vendas - Produtos da tela
+   tbltef.CreateDataSet;        // Inicializando a tabela para armazenar as transações TEF
+   tblprod.CreateDataSet;       // Inicializando a tabela para armazenar as prodtos da consulta
+   tblprevisao.CreateDataSet;   // Inicializando a tabela para conciliação - previsao
+   tblliquidacao.CreateDataSet; // Inicializando a tabela para conciliação - Liquidação
    //---------------------------------------------------------------------------
    if not DirectoryExists(GetCurrentDir+'\dados') then   // Verificando a existência da pasta dados
       CreateDir(GetCurrentDir+'\dados');   // Criando se não existir

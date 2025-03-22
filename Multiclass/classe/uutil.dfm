@@ -119,6 +119,20 @@ object frmutil: Tfrmutil
     ParentFont = False
     OnClick = btEnviarXMLClick
   end
+  object btmovifluxo: TSpeedButton
+    Left = 20
+    Top = 279
+    Width = 425
+    Height = 54
+    Caption = 'D - Concilia'#231#227'o MOVIFLUXO'
+    Font.Charset = ANSI_CHARSET
+    Font.Color = 3026478
+    Font.Height = -21
+    Font.Name = 'Arial Black'
+    Font.Style = [fsBold]
+    ParentFont = False
+    OnClick = btmovifluxoClick
+  end
   object btvoltar: TBitBtn
     Left = 20
     Top = 459

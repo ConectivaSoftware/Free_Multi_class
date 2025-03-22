@@ -4,6 +4,7 @@ interface
 
 uses
   uMulticlassFuncoes,
+  uMoviFluxo,
   blcksock,
   acbrnfe.classes,
   uKSTypes,
@@ -262,6 +263,32 @@ type
     Label68: TLabel;
     Shape32: TShape;
     Label73: TLabel;
+    Shape12: TShape;
+    Label36: TLabel;
+    Shape14: TShape;
+    Label37: TLabel;
+    edtembedUserNamePIX: TMaskEdit;
+    Label38: TLabel;
+    edtembedPasswordPIX: TMaskEdit;
+    btembedPasswordPIX: TSpeedButton;
+    Label39: TLabel;
+    edtembedCNPJPIX: TMaskEdit;
+    Label40: TLabel;
+    edtembedChavePIX: TMaskEdit;
+    Label41: TLabel;
+    cbembedHMLPIX: TCheckBox;
+    TabSheet9: TTabSheet;
+    fundomovifluxo: TShape;
+    Image2: TImage;
+    Label42: TLabel;
+    edtMOVIFLUXOToken: TMaskEdit;
+    Label43: TLabel;
+    edtMOVIFLUXOIDCliente: TMaskEdit;
+    btMOVIFLUXOBuscarCliente: TSpeedButton;
+    cbMOVIFLUXOhml: TCheckBox;
+    cbMOVIFLUXOSalvarLOG: TCheckBox;
+    cbClientesMovifluxo: TComboBox;
+    Label45: TLabel;
     procedure FormActivate(Sender: TObject);
     procedure btcancelarClick(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
@@ -298,18 +325,23 @@ type
     procedure btembedversenhaClick(Sender: TObject);
     procedure TabSheet4Show(Sender: TObject);
     procedure btbuscaimagempinpadClick(Sender: TObject);
-    procedure edtporta_impressora_ESC_POSKeyDown(Sender: TObject; var Key: Word;
-      Shift: TShiftState);
+    procedure edtporta_impressora_ESC_POSKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure btdetectarpinpadClick(Sender: TObject);
     procedure DBGridformasDblClick(Sender: TObject);
     procedure btbuscaimagemformaClick(Sender: TObject);
     procedure btgerarTokenClick(Sender: TObject);
+    procedure btembedPasswordPIXClick(Sender: TObject);
+    procedure TabSheet9Show(Sender: TObject);
+    procedure btMOVIFLUXOBuscarClienteClick(Sender: TObject);
+    procedure cbClientesMovifluxoExit(Sender: TObject);
+    procedure cbClientesMovifluxoSelect(Sender: TObject);
   private
     { Private declarations }
   public
-    NovaForma   : boolean;    // Para definir que o operador clicou no botão de novo ou alterar forma
-    Config      : TKSConfig;  // Variável que armazena em memória as configurações
-    AcessouForm : boolean;    // Para informar que a inicialização do Form já aconteceu
+    NovaForma           : boolean;    // Para definir que o operador clicou no botão de novo ou alterar forma
+    Config              : TKSConfig;  // Variável que armazena em memória as configurações
+    AcessouForm         : boolean;    // Para informar que a inicialização do Form já aconteceu
+    MoviFluxoListaLojas : TMoviFluxoListaLojas; // Para fazer a consulta de clientes
   end;
 
 var
@@ -528,6 +560,13 @@ begin
    Result.ConfigEmbedIT.Username           := frmconfig.edtembedLogin.Text;                                   // gerado pelo time de integração
    Result.ConfigEmbedIT.password           := frmconfig.edtembedSenha.Text;                                   // gerado pelo time de integração
    Result.ConfigEmbedIT.DeviceSerial       := frmconfig.edtembedSerial.Text;                                  // obtido através da aplicação PDV Mobi no POS
+   Result.ConfigEmbedIT.CNPJPIX            := frmconfig.edtembedCNPJPIX.Text;                                 // CNPJ do cliente
+   Result.ConfigEmbedIT.ChavePIX           := frmconfig.edtembedChavePIX.Text;                                // Chave PIX do cliente
+   Result.ConfigEmbedIT.UsernamePIX        := frmconfig.edtembedUserNamePIX.Text;                             // UserName para autenticação TOKEN BEARER
+   Result.ConfigEmbedIT.PasswordPIX        := frmconfig.edtembedPasswordPIX.Text;                             // Senha para autenticação TOKEN BEARER
+   Result.ConfigEmbedIT.AmbientePIX        := tpAmbProducao;                                                  // Operar em homologaçã ou produção, default produção
+   if frmconfig.cbembedHMLPIX.Checked then
+      Result.ConfigEmbedIT.AmbientePIX     := tpAmbHomologacao;
    Result.ConfigEmbedIT.ComprovanteCliente := TtpTEFImpressao(frmconfig.cbEmbedComprovanteCliente.ItemIndex); // Impressão do comprovante do cliente
    Result.ConfigEmbedIT.ComprovanteLoja    := TtpTEFImpressao(frmconfig.cbEmbedComprovanteLoja.ItemIndex);    // Impressão do comprovante do lojista
    Result.ConfigEmbedIT.SalvarLog          := frmconfig.cbEmbedSalvarLog.Checked;                             // Habilitar para salvar o LOG
@@ -553,6 +592,11 @@ begin
    Result.ConfigEmitente.EnderEmit.CEP             := strtointdef(frmconfig.edtcep.Text,0);
    Result.ConfigEmitente.EnderEmit.fone            := frmconfig.edtfone.Text;
    Result.ConfigEmitente.IE                        := frmconfig.edtie.Text;
+   //---------------------------------------------------------------------------
+   Result.ConfigMovifluxo.Token                    := frmconfig.edtMOVIFLUXOToken.Text;
+   Result.ConfigMovifluxo.IDCliente                := frmconfig.edtMOVIFLUXOIDCliente.Text;
+   Result.ConfigMovifluxo.Homologacao              := frmconfig.cbMOVIFLUXOhml.Checked;
+   Result.ConfigMovifluxo.SalvarLOG                := frmconfig.cbMOVIFLUXOSalvarLOG.Checked;
    //---------------------------------------------------------------------------
 end;
 //------------------------------------------------------------------------------
@@ -622,6 +666,11 @@ begin
    frmconfig.edtembedLogin.Text                    := config.ConfigEmbedIT.Username;
    frmconfig.edtembedSenha.Text                    := config.ConfigEmbedIT.password;
    frmconfig.edtembedSerial.Text                   := config.ConfigEmbedIT.DeviceSerial;
+   frmconfig.edtembedCNPJPIX.Text                  := config.ConfigEmbedIT.CNPJPIX;                                 // CNPJ do cliente
+   frmconfig.edtembedChavePIX.Text                 := config.ConfigEmbedIT.ChavePIX;                                // Chave PIX do cliente
+   frmconfig.edtembedUserNamePIX.Text              := config.ConfigEmbedIT.UsernamePIX;                             // UserName para autenticação TOKEN BEARER
+   frmconfig.edtembedPasswordPIX.Text              := config.ConfigEmbedIT.PasswordPIX;                             // Senha para autenticação TOKEN BEARER
+   frmconfig.cbembedHMLPIX.Checked                 := config.ConfigEmbedIT.AmbientePIX=tpAmbHomologacao;            // Operar em homologaçã
    frmconfig.cbEmbedComprovanteCliente.ItemIndex   := ord(config.ConfigEmbedIT.ComprovanteCliente);
    frmconfig.cbEmbedComprovanteLoja.ItemIndex      := ord(config.ConfigEmbedIT.ComprovanteLoja);
    frmconfig.cbEmbedSalvarLog.Checked              := config.ConfigEmbedIT.SalvarLog;
@@ -665,6 +714,11 @@ begin
    frmconfig.edtcep.Text            := config.ConfigEmitente.EnderEmit.CEP.ToString;
    frmconfig.edtfone.Text           := config.ConfigEmitente.EnderEmit.fone;
    frmconfig.edtie.Text             := config.ConfigEmitente.IE;
+   //---------------------------------------------------------------------------
+   frmconfig.edtMOVIFLUXOToken.Text       := config.ConfigMovifluxo.Token;
+   frmconfig.edtMOVIFLUXOIDCliente.Text   := config.ConfigMovifluxo.IDCliente;
+   frmconfig.cbMOVIFLUXOhml.Checked       := config.ConfigMovifluxo.Homologacao;
+   frmconfig.cbMOVIFLUXOSalvarLOG.Checked := config.ConfigMovifluxo.SalvarLOG;
    //---------------------------------------------------------------------------
 end;
 //------------------------------------------------------------------------------
@@ -740,9 +794,14 @@ begin
       wIni.WriteBool('KSConfigFormaSMARTVERO','SalvarLog',config.ConfigSMARTTEFVero.SalvarLog);                             // Habilitar para salvar o LOG
       //------------------------------------------------------------------------
       wIni.WriteString('KSConfigEmbedIT','CodigoAtivacao',config.ConfigEmbedIT.CodigoAtivacao);                            //
-      wIni.WriteString('KSConfigEmbedIT','Username',config.ConfigEmbedIT.Username);                    //
-      wIni.WriteString('KSConfigEmbedIT','password',config.ConfigEmbedIT.password);                        //
-      wIni.WriteString('KSConfigEmbedIT','DeviceSerial',config.ConfigEmbedIT.DeviceSerial);                            //
+      wIni.WriteString('KSConfigEmbedIT','Username',config.ConfigEmbedIT.Username);                                        //
+      wIni.WriteString('KSConfigEmbedIT','password',config.ConfigEmbedIT.password);                                        //
+      wIni.WriteString('KSConfigEmbedIT','DeviceSerial',config.ConfigEmbedIT.DeviceSerial);                                //
+      wIni.WriteString('KSConfigEmbedIT','CNPJPIX',config.ConfigEmbedIT.CNPJPIX);                                          //
+      wIni.WriteString('KSConfigEmbedIT','ChavePIX',config.ConfigEmbedIT.ChavePIX);                                        //
+      wIni.WriteString('KSConfigEmbedIT','UserNamePIX',config.ConfigEmbedIT.UsernamePIX);                                  //
+      wIni.WriteString('KSConfigEmbedIT','PasswordPIX',config.ConfigEmbedIT.PasswordPIX);                                  //
+      wIni.WriteInteger('KSConfigEmbedIT','AmbientePIX',ord(config.ConfigEmbedIT.AmbientePIX));                            //
       wIni.WriteInteger('KSConfigEmbedIT','ComprovanteCliente',ord(config.ConfigEmbedIT.ComprovanteCliente));  // Impressão do comprovante do cliente
       wIni.WriteInteger('KSConfigEmbedIT','ComprovanteLoja',ord(config.ConfigEmbedIT.ComprovanteLoja));        // Impressão do comprovante do lojista
       wIni.WriteBool('KSConfigEmbedIT','SalvarLog',config.ConfigEmbedIT.SalvarLog);                            // Habilitar para salvar o LOG
@@ -772,6 +831,11 @@ begin
       wIni.WriteString('KSConfigEmitente','fone',config.ConfigEmitente.EnderEmit.fone);
       wIni.WriteString('KSConfigEmitente','IE',config.ConfigEmitente.IE);
       //------------------------------------------------------------------------
+      wIni.WriteString('KSConfigMovifluxo','Token',config.ConfigMovifluxo.Token);
+      wIni.WriteString('KSConfigMovifluxo','IDCliente',config.ConfigMovifluxo.IDCliente);
+      wIni.WriteBool('KSConfigMovifluxo','Homologacao',config.ConfigMovifluxo.Homologacao);
+      wIni.WriteBool('KSConfigMovifluxo','SalvarLOG',config.ConfigMovifluxo.SalvarLOG);
+      //------------------------------------------------------------------------
    finally
       wIni.Free;
    end;
@@ -784,7 +848,7 @@ procedure SA_AjustarEdicaoFormas;
 begin
    //---------------------------------------------------------------------------
    case frmconfig.rgevento.ItemIndex of
-      0,1,5:frmconfig.pntefconfig.Visible := false;
+      0,1,5,9:frmconfig.pntefconfig.Visible := false;
       2,3,4,6,7,8:frmconfig.pntefconfig.Visible := true;
    end;
    //---------------------------------------------------------------------------
@@ -906,6 +970,14 @@ begin
    frmconfig.Close;
 end;
 
+procedure Tfrmconfig.btembedPasswordPIXClick(Sender: TObject);
+begin
+   if edtembedPasswordPIX.PasswordChar=#0 then
+      edtembedPasswordPIX.PasswordChar := '*'
+   else if edtembedPasswordPIX.PasswordChar<>#0 then
+      edtembedPasswordPIX.PasswordChar := #0;
+end;
+
 procedure Tfrmconfig.btembedversenhaClick(Sender: TObject);
 begin
    if edtembedSenha.PasswordChar=#0 then
@@ -918,6 +990,42 @@ procedure Tfrmconfig.btgerarTokenClick(Sender: TObject);
 begin
    beep;
    showmessage('Função ainda não foi implementada no servidor. Contacte o administrador da classe para solicitar o TOKEN.');
+end;
+
+procedure Tfrmconfig.btMOVIFLUXOBuscarClienteClick(Sender: TObject);
+var
+   MoviFluxo : TMoviFluxo;
+   d         : integer;
+begin
+   //---------------------------------------------------------------------------
+   MoviFluxo             := TMoviFluxo.Create;
+   MoviFluxo.Token       := Config.ConfigMovifluxo.Token;
+   MoviFluxo.Homologacao := Config.ConfigMovifluxo.Homologacao;
+   MoviFluxo.SalvarLOG   := Config.ConfigMovifluxo.SalvarLOG;
+   MoviFluxoListaLojas   := MoviFluxo.SA_ListarLojas;  // Consultar a lista de lojas
+   MoviFluxo.Free;
+   //---------------------------------------------------------------------------
+   cbClientesMovifluxo.Items.Clear;
+   if length(MoviFluxoListaLojas)>1 then
+      begin
+         //---------------------------------------------------------------------
+         for d := 1 to length(MoviFluxoListaLojas) do
+            cbClientesMovifluxo.Items.Add(MoviFluxoListaLojas[d-1].cnpj+' '+MoviFluxoListaLojas[d-1].nome_empresa);
+         //---------------------------------------------------------------------
+         cbClientesMovifluxo.Left      := edtMOVIFLUXOIDCliente.Left;
+         cbClientesMovifluxo.Top       := edtMOVIFLUXOIDCliente.Top;
+         cbClientesMovifluxo.Width     := edtMOVIFLUXOIDCliente.Width;
+         cbClientesMovifluxo.ItemIndex := 0;
+         cbClientesMovifluxo.Visible   := true;
+         //---------------------------------------------------------------------
+         cbClientesMovifluxo.DroppedDown := true;
+         cbClientesMovifluxo.SetFocus;
+
+         //---------------------------------------------------------------------
+      end
+   else
+      edtMOVIFLUXOIDCliente.Text := MoviFluxoListaLojas[0].user_id;
+   //---------------------------------------------------------------------------
 end;
 
 procedure Tfrmconfig.btnovaformaClick(Sender: TObject);
@@ -976,6 +1084,18 @@ end;
 procedure Tfrmconfig.btvoltaformaClick(Sender: TObject);
 begin
    pgcformas.ActivePageIndex := 0;
+end;
+
+procedure Tfrmconfig.cbClientesMovifluxoExit(Sender: TObject);
+begin
+   cbClientesMovifluxo.Visible := false;
+end;
+
+procedure Tfrmconfig.cbClientesMovifluxoSelect(Sender: TObject);
+begin
+   if cbClientesMovifluxo.ItemIndex>=0 then
+      edtMOVIFLUXOIDCliente.Text := frmconfig.MoviFluxoListaLojas[cbClientesMovifluxo.ItemIndex].user_id;
+   cbClientesMovifluxo.Visible := false;
 end;
 
 procedure Tfrmconfig.cblistaimpressorasEnter(Sender: TObject);
@@ -1263,6 +1383,12 @@ begin
    btsalvar.Visible   := true;
    btcancelar.Visible := true;
 
+end;
+
+procedure Tfrmconfig.TabSheet9Show(Sender: TObject);
+begin
+   fundomovifluxo.Align        := alClient;
+   cbClientesMovifluxo.Visible := false;
 end;
 
 end.

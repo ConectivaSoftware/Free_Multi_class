@@ -486,6 +486,7 @@ begin
                         tpKSEventoSmartTEFVero      : PagamentoVenda.Pagamentos[dmMulticlass.tblpgto.RecNo-1].FormaVero        := TtpVEROFormaPgto(dmMulticlass.tblformas.FieldByName('TipoPgto').AsInteger);
                         tpKSEventoTEFEmbedIT        : PagamentoVenda.Pagamentos[dmMulticlass.tblpgto.RecNo-1].FormaEmbed       := TtpEmbedIFormaPgto(dmMulticlass.tblformas.FieldByName('TipoPgto').AsInteger);
                         tpKSEventoSmartTEFEmbedIT   : PagamentoVenda.Pagamentos[dmMulticlass.tblpgto.RecNo-1].FormaEmbed       := TtpEmbedIFormaPgto(dmMulticlass.tblformas.FieldByName('TipoPgto').AsInteger);
+                        tpKSEventoPIXEmbed          : PagamentoVenda.Pagamentos[dmMulticlass.tblpgto.RecNo-1].FormaEmbed       := TtpEmbedIFormaPgto(dmMulticlass.tblformas.FieldByName('TipoPgto').AsInteger);
                      end;
                   end
                else

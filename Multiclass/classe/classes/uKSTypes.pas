@@ -22,9 +22,9 @@ type
   //----------------------------------------------------------------------------
   TTMKMPixStatusConsulta = (tPgtoPIXAguardando,tPgtoPIXRealizado,tPgtoPIXInexistente,tPgtoPIXErro,tPgtoPIXCancelado,tPgtoPIXIndefinido,tPgtoPIXExpirado);
   //----------------------------------------------------------------------------
-  TTipoTef               = (tpTEFELGIN,tpTEFMultiPlus,tpMKMPix,tpVEROSmartTEF,tpSTONESmartTEF,tpTEFVSPAgue,tpTEFEmbed,tpEmbedSmartTEF);
+  TTipoTef               = (tpTEFELGIN,tpTEFMultiPlus,tpMKMPix,tpVEROSmartTEF,tpSTONESmartTEF,tpTEFVSPAgue,tpTEFEmbed,tpEmbedSmartTEF,tpEmbedITPIX);
   //----------------------------------------------------------------------------
-  TKSEventoFormaPgto     = (tpKSEventoSolvencia,tpKSEventoNenhum,tpKSEventoVSSPague,tpKSEventoMultiplus,tpKSEventoElgin,tpKSEventoMKMPix,tpKSEventoSmartTEFVero,tpKSEventoTEFEmbedIT,tpKSEventoSmartTEFEmbedIT);  // Eventos disparados pela forma de pagamento
+  TKSEventoFormaPgto     = (tpKSEventoSolvencia,tpKSEventoNenhum,tpKSEventoVSSPague,tpKSEventoMultiplus,tpKSEventoElgin,tpKSEventoMKMPix,tpKSEventoSmartTEFVero,tpKSEventoTEFEmbedIT,tpKSEventoSmartTEFEmbedIT,tpKSEventoPIXEmbed);  // Eventos disparados pela forma de pagamento
   //----------------------------------------------------------------------------
   TtpTEFImpressao        = (tpTEFImprimirSempre, tpTEFPerguntar , tpTEFNaoImprimir);  // Forma de impressão nos eventos de TEF
   //----------------------------------------------------------------------------
@@ -32,7 +32,8 @@ type
   TtpElginFormaPgto       = (ElginPgtoPerguntar, ElginPgtoCreditoPerguntar,ElginPgtoCreditoVista,ElginPgtoCreditoPaceladoPerguntar,ElginPgtoCreditoParceladoLoja,ElginPgtoCreditoParceladoADM,ElginPgtoDebitoPerguntar,ElginPgtoDebitoVista,ElginPgtoDebitpPre,ElginPgtoPIX);
   TtpMultiplusFormaPgto   = (tpMPlPerguntar,tpMPlcreditoPerguntar,tpMPlCreditoVista, tpMPlCreditoParceladoPerguntar , tpMPlCreditoaParceladoLoja , tpMPlCreditoParceladoADM , tpMPlDebitoPerguntar, tpMPlDebitoVista, tpMPlDebitoPre, tpMPlFrota, tpMPlVoucher , tpMPlPIX, tpMPlPIXMercadoPago,tpMPlPIXPicPay);
   TtpVEROFormaPgto        = (tpVeroPerguntar, tpVEROCreditoPerguntar, tpVEROCreditoVista, tpVEROCreditoParceladoPerguntar,tpVEROCreditoParceladoLoja,tpVEROCreditoParceladoADM,tpVEROCreditoMensal,tpVERODebitoPerguntar,tpVERODebitoVista,tpVERODebitoBANRI,tpVERODebitoBanriPre,tpVEROBanriPrazo,tpVEROBanriMinuto,tpVEROVoucher,tpVEROPIX,tpVEROWLLET);
-  TtpEmbedIFormaPgto      = (tpEmbedPgtoPerguntar,tpEmbedPgtoCreditoPerguntar,tpEmbedPgtoCreditoVista,tpEmbedPgtoCreditoParceladoPerguntar,tpEmbedPgtoCreditoParceladoLoja,tpEmbedPgtoCreditoParceladoADM,tpEmbedPgtoDebito,tpEmbedPgtoNenhum);
+  TtpEmbedIFormaPgto      = (tpEmbedPgtoPerguntar,tpEmbedPgtoCreditoPerguntar,tpEmbedPgtoCreditoVista,tpEmbedPgtoCreditoParceladoPerguntar,tpEmbedPgtoCreditoParceladoLoja,tpEmbedPgtoCreditoParceladoADM,tpEmbedPgtoDebito,tpEmbedPgtoPIX,tpEmbedPgtoNenhum);
+  TEMBEDAmbiente          = (tpAmbHomologacao,tpAmbProducao); // Ambiente de operação do PIX
   //----------------------------------------------------------------------------
   TKSConfigFormaTEFVSPague = record
      TipoPgto     : TtpVSPagueFormaPgto;
@@ -134,6 +135,11 @@ type
      Username           : string;          // gerado pelo time de integração
      password           : string;          // gerado pelo time de integração
      DeviceSerial       : string;          // obtido através da aplicação PDV Mobi no POS
+     CNPJPIX            : string;
+     ChavePIX           : string;
+     UsernamePIX        : string;
+     PasswordPIX        : string;
+     AmbientePIX        : TEMBEDAmbiente;  // Ambiente em que a aplicação vai operar
      ComprovanteCliente : TtpTEFImpressao; // Impressão do comprovante do cliente
      ComprovanteLoja    : TtpTEFImpressao; // Impressão do comprovante do lojista
      SalvarLog          : boolean;         // Habilitar para salvar o LOG
@@ -161,6 +167,13 @@ type
      EmpresaSH : string; // Nome da empresa SH
   end;
   //----------------------------------------------------------------------------
+  TKSConfigMovifluxo = record
+     Token       : string;
+     IDCliente   : string;
+     Homologacao : boolean;
+     SalvarLOG   : boolean;
+  end;
+  //----------------------------------------------------------------------------
   TKSConfig = record // Configurações gerais para emissão da NFCe
      ConfigSistema       : TKSConfigSistema;           // Dados da SH e sistema
      ConfigEmitente      : TEmit;                      // Dados do emitente da NFCe do padrão ACBR
@@ -173,6 +186,7 @@ type
      ConfigSMARTTEFVero  : TKSConfigSMARTTEFVero;      // Configurações para o VERO SMART POS
      ConfigEmbedIT       : TKSConfigEmbedIT;           // Configuração para EMBED-IT
      ConfigPinPad        : TKSConfigPinPad;            // Configuração do PINPAD
+     ConfigMovifluxo     : TKSConfigMovifluxo;         // Configuração da MOVIFLUXO - Conciliações
   end;
   //----------------------------------------------------------------------------
   TRetornoPagamentoTEF = record
@@ -264,10 +278,74 @@ type
   TKSStatus = (stKSOk,stKSFalha);
   //----------------------------------------------------------------------------
   TKSRespostaConsultaProd = record
-     Status     : TKSStatus;
-     Mensagem   : string;
-     Produto    : TKSCadastro_prod;
+     Status        : TKSStatus;
+     Consultou     : boolean;
+     Mensagem      : string;
+     Produto       : TKSCadastro_prod;
   end;
+  //----------------------------------------------------------------------------
+  //  Item de conciliação - Previsao
+  //----------------------------------------------------------------------------
+  TMoviFluxoItemPrevisao = record
+     adquirente              : string;
+     codigo_pedido           : string;
+     nsu                     : string;
+     meio_pagamento          : string;
+     produto                 : string;
+     estabelecimento         : string;
+     data_venda              : TDate;
+     data_prevista_pagamento : TDate;
+     valor_bruto_transacao   : real;
+     valor_bruto_parcela     : real;
+     valor_liquido_parcela   : real;
+     taxa_adquirencia        : real;
+     bandeira                : string;
+     parcela                 : integer;
+     plano                   : integer;
+  end;
+  //----------------------------------------------------------------------------
+  TMoviFluxoItensPrevisao = array of TMoviFluxoItemPrevisao;  // Extrato do movimento
+  //----------------------------------------------------------------------------
+  //  Itens do extrato - Liquidacao
+  //----------------------------------------------------------------------------
+  TMoviFluxoItemLiquidacao = record
+     adquirente              : string;
+     codigo_pedido           : string;
+     nsu                     : string;
+     meio_pagamento          : string;
+     bandeira                : string;
+     produto                 : string;
+     estabelecimento         : string;
+     data_pagamento          : TDate;
+     valor_bruto_transacao   : real;
+     valor_bruto_parcela     : real;
+     valor_liquido_parcela   : real;
+     taxa_administrativa     : real;
+     parcela                 : integer;
+     plano                   : integer;
+     codigo_banco            : string;
+     nome_banco              : string;
+     agencia                 : string;
+     conta_corrente_poupanca : string;
+  end;
+  //----------------------------------------------------------------------------
+  TMoviFluxoItensLiquidacao = array of TMoviFluxoItemLiquidacao;  // Extrato do movimento - Liquidacao
+  //----------------------------------------------------------------------------
+  TMoviFluxoLoja = record
+     user_id      : string;
+     nome_empresa : string;
+     cnpj         : string;
+  end;
+  //----------------------------------------------------------------------------
+  TMoviFluxoListaLojas = array of TMoviFluxoLoja;
+  //----------------------------------------------------------------------------
+  TMoviFluxoExtrato = record
+     UserID      : string;
+     Previsao    : TMoviFluxoItensPrevisao;
+     Liquidacoes : TMoviFluxoItensLiquidacao
+  end;
+  //----------------------------------------------------------------------------
+
   //----------------------------------------------------------------------------
 
 implementation

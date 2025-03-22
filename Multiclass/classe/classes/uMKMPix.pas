@@ -61,7 +61,6 @@ type
         procedure SA_GerarCobrancaPIX;
         procedure SA_PIXConsultarCobranca;
         procedure SA_PintarPIX(QRCode: string);
-        procedure SA_SalvarLog(titulo, dado: string);
         function SA_UsarPinpad:boolean;
         Procedure SA_ConfigurarPinPadPIX;
         function SA_PINPAD_MostrarImagem(imagem:TPngImage):boolean;
@@ -202,7 +201,8 @@ begin
                                '"cnpj":"'+LCNPJ+'",'+
                                '"valor":"'+formatfloat('###,##0.00',LValor)+'",'+
                                '"espera":"'+ltempo.ToString+'"'+
-                               '}');
+                               '}',
+                               GetCurrentDir+'\TEF_Log\logMKMPix'+formatdatetime('yyyymmdd',date)+'.txt',LSalvarLog);
       //------------------------------------------------------------------------
       LResponse := TRequest.New.BaseURL(LHostMKMPIX+':12090/cobrancapixmkm')
                      .AddBody('{"chave":"'+string(encodeBase64(ansistring(LChave)))+'",'+
@@ -223,11 +223,11 @@ begin
             retornoJSON.Free;
          end
       else
-         SA_SalvarLog('FALHA GERAR QRCODE MSSC',LResponse.Content+' '+LResponse.StatusCode.ToString);
+         SA_SalvarLog('FALHA GERAR QRCODE MSSC',LResponse.Content+' '+LResponse.StatusCode.ToString,GetCurrentDir+'\TEF_Log\logMKMPix'+formatdatetime('yyyymmdd',date)+'.txt',LSalvarLog);
       //------------------------------------------------------------------------
    except on e:exception do
       begin
-         SA_SalvarLog('FALHA AO CHAMAR SERCVIDOR MSSC',e.Message);
+         SA_SalvarLog('FALHA AO CHAMAR SERCVIDOR MSSC',e.Message,GetCurrentDir+'\TEF_Log\logMKMPix'+formatdatetime('yyyymmdd',date)+'.txt',LSalvarLog);
       end;
    end;
 end;
@@ -279,7 +279,7 @@ begin
       PintarQRCode(QRCode, frmwebtef.logomp.Picture.Bitmap, qrUTF8BOM);
    except on e:exception do
       begin
-         SA_SalvarLog('ERRO PINTAR PIX NA TELA',e.Message);
+         SA_SalvarLog('ERRO PINTAR PIX NA TELA',e.Message,GetCurrentDir+'\TEF_Log\logMKMPix'+formatdatetime('yyyymmdd',date)+'.txt',LSalvarLog);
       end
    end;
    //---------------------------------------------------------------------------
@@ -299,7 +299,7 @@ begin
             PinPad.IsEnabled   := false;
          except on e:exception do
             begin
-               SA_SalvarLog('ERRO PINTAR PIX NA NO PINPAD',e.Message);
+               SA_SalvarLog('ERRO PINTAR PIX NA NO PINPAD',e.Message,GetCurrentDir+'\TEF_Log\logMKMPix'+formatdatetime('yyyymmdd',date)+'.txt',LSalvarLog);
             end
 
          end;
@@ -318,7 +318,8 @@ begin
                                '"cnpj":"'+LCNPJ+'",'+
                                '"TxID":"'+LTxID+'",'+
                                '"espera":"'+ltempo.ToString+'"'+
-                               '}');
+                               '}',
+                               GetCurrentDir+'\TEF_Log\logMKMPix'+formatdatetime('yyyymmdd',date)+'.txt',LSalvarLog);
       //------------------------------------------------------------------------
       LResponse := TRequest.New.BaseURL(LHostMKMPIX+':12090/consultapixmkm')
                      .AddBody('{"chave":"'+string(encodeBase64(ansistring(LChave)))+'",'+
@@ -333,14 +334,14 @@ begin
             retornoJSON      := TJSonObject.ParseJSONValue(LResponse.Content );
             LE2E             := retornoJSON.GetValue<string>('E2E','');
             LStatusTransacao := SA_StatusPIX(retornoJSON.GetValue<string>('statuspix',''));
-            SA_SalvarLog('CONSULTAR MSSC',LResponse.Content+' '+LResponse.StatusCode.ToString + retornoJSON.GetValue<string>('statuspix',''));
+            SA_SalvarLog('CONSULTAR MSSC',LResponse.Content+' '+LResponse.StatusCode.ToString + retornoJSON.GetValue<string>('statuspix',''),GetCurrentDir+'\TEF_Log\logMKMPix'+formatdatetime('yyyymmdd',date)+'.txt',LSalvarLog);
             retornoJSON.Free;
          end
       else
-         SA_SalvarLog('FALHA CONSULTAR MSSC',LResponse.Content+' '+LResponse.StatusCode.ToString);
+         SA_SalvarLog('FALHA CONSULTAR MSSC',LResponse.Content+' '+LResponse.StatusCode.ToString,GetCurrentDir+'\TEF_Log\logMKMPix'+formatdatetime('yyyymmdd',date)+'.txt',LSalvarLog);
    except on e:exception do
       begin
-         SA_SalvarLog('ERRO CONSULTAR MSSC',e.Message);
+         SA_SalvarLog('ERRO CONSULTAR MSSC',e.Message,GetCurrentDir+'\TEF_Log\logMKMPix'+formatdatetime('yyyymmdd',date)+'.txt',LSalvarLog);
       end;
 
    end;
@@ -597,7 +598,7 @@ begin
             //------------------------------------------------------------------
             //  Ocorreu um erro
             //------------------------------------------------------------------
-            SA_SalvarLog('RESPOSTA REALIZAR PAGAMENTO','Não foi possível gerar o QRCODE');
+            SA_SalvarLog('RESPOSTA REALIZAR PAGAMENTO','Não foi possível gerar o QRCODE',GetCurrentDir+'\TEF_Log\logMKMPix'+formatdatetime('yyyymmdd',date)+'.txt',LSalvarLog);
             frmwebtef.mensagem := 'Ocorreu erro ao gerar a cobrança';
             TThread.Synchronize(TThread.CurrentThread,SA_MostramensagemT);
             //------------------------------------------------------------------
@@ -624,13 +625,13 @@ procedure TMKMPix.SA_RestaurarLogoT;
 var
    png : TPngImage;
 begin
-  //------------------------------------------------------
+  //----------------------------------------------------------------------------
    frmwebtef.logomp.Stretch      := false;
    frmwebtef.logomp.Proportional := true;
    frmwebtef.logomp.Center       := true;
    frmwebtef.logomp.Picture.LoadFromFile(GetCurrentDir+'\icones\tef_mkmpix.bmp');
    frmwebtef.logomp.Repaint;
-  //------------------------------------------------------
+  //----------------------------------------------------------------------------
   if SA_UsarPinpad then
      begin
         try
@@ -641,19 +642,11 @@ begin
            png.Free;
         except on e:exception do
            begin
-              SA_SalvarLog('ERRO PINTAR LOGO NO PINPAD',e.Message);
+              SA_SalvarLog('ERRO PINTAR LOGO NO PINPAD',e.Message,GetCurrentDir+'\TEF_Log\logMKMPix'+formatdatetime('yyyymmdd',date)+'.txt',LSalvarLog);
            end
         end;
      end;
   //------------------------------------------------------
-end;
-
-procedure TMKMPix.SA_SalvarLog(titulo, dado: string);
-begin
-   if LSalvarLog then
-      SA_Salva_Arquivo_Incremental(titulo + ' ' +
-                                   formatdatetime('dd/mm/yyyy hh:mm:ss',now)+#13+dado,
-                                   GetCurrentDir+'\TEF_Log\logMKMPix'+formatdatetime('yyyymmdd',date)+'.txt');
 end;
 
 function TMKMPix.SA_StatusPIX(status: string): TTMKMPixStatusConsulta;

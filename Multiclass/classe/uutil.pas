@@ -28,6 +28,7 @@ type
     btVBIPendencias: TSpeedButton;
     btVBIExtrato: TSpeedButton;
     btEnviarXML: TSpeedButton;
+    btmovifluxo: TSpeedButton;
     procedure btvoltarClick(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure btadmelginClick(Sender: TObject);
@@ -39,6 +40,7 @@ type
     procedure btVBIPendenciasClick(Sender: TObject);
     procedure btVBIExtratoClick(Sender: TObject);
     procedure btEnviarXMLClick(Sender: TObject);
+    procedure btmovifluxoClick(Sender: TObject);
   private
     { Private declarations }
   public
@@ -52,7 +54,7 @@ implementation
 
 {$R *.dfm}
 
-uses urelatorio, uenviarXML;
+uses urelatorio, uenviarXML, uconciliacao;
 
 procedure Tfrmutil.btEnviarXMLClick(Sender: TObject);
 begin
@@ -64,6 +66,12 @@ procedure Tfrmutil.btlistatefClick(Sender: TObject);
 begin
    Application.CreateForm(Tfrmrelatorio, frmrelatorio);
    frmrelatorio.ShowModal;
+end;
+
+procedure Tfrmutil.btmovifluxoClick(Sender: TObject);
+begin
+  Application.CreateForm(Tfrmconciliacao, frmconciliacao);
+  frmconciliacao.ShowModal;
 end;
 
 procedure Tfrmutil.btVBIExtratoClick(Sender: TObject);

@@ -594,4 +594,145 @@ object frmprinc: Tfrmprinc
     Left = 177
     Top = 280
   end
+  object dtsprevisao: TDataSource
+    AutoEdit = False
+    DataSet = tblprevisao
+    Left = 185
+    Top = 352
+  end
+  object tblprevisao: TClientDataSet
+    Aggregates = <>
+    Params = <>
+    Left = 144
+    Top = 352
+    object tblprevisaoadquirente: TStringField
+      FieldName = 'adquirente'
+      Size = 40
+    end
+    object tblprevisaocodigo_pedido: TStringField
+      FieldName = 'codigo_pedido'
+      Size = 30
+    end
+    object tblprevisaonsu: TStringField
+      FieldName = 'nsu'
+      Size = 30
+    end
+    object tblprevisaomeio_pagamento: TStringField
+      FieldName = 'meio_pagamento'
+      Size = 30
+    end
+    object tblprevisaoproduto: TStringField
+      FieldName = 'produto'
+      Size = 30
+    end
+    object tblprevisaoestabelecimento: TStringField
+      FieldName = 'estabelecimento'
+      Size = 60
+    end
+    object tblprevisaodata_venda: TDateField
+      FieldName = 'data_venda'
+    end
+    object tblprevisaodata_prevista_pagamento: TDateField
+      FieldName = 'data_prevista_pagamento'
+    end
+    object tblprevisaovalor_bruto_transacao: TFloatField
+      FieldName = 'valor_bruto_transacao'
+    end
+    object tblprevisaovalor_bruto_parcela: TFloatField
+      FieldName = 'valor_bruto_parcela'
+    end
+    object tblprevisaovalor_liquido_parcela: TFloatField
+      FieldName = 'valor_liquido_parcela'
+    end
+    object tblprevisaotaxa_adquirencia: TFloatField
+      FieldName = 'taxa_adquirencia'
+    end
+    object tblprevisaobandeira: TStringField
+      FieldName = 'bandeira'
+      Size = 30
+    end
+    object tblprevisaoparcela: TIntegerField
+      FieldName = 'parcela'
+    end
+    object tblprevisaoplano: TIntegerField
+      FieldName = 'plano'
+    end
+  end
+  object dtsliquidacao: TDataSource
+    AutoEdit = False
+    DataSet = tblliquidacao
+    Left = 193
+    Top = 424
+  end
+  object tblliquidacao: TClientDataSet
+    Aggregates = <>
+    Params = <>
+    Left = 152
+    Top = 424
+    object tblliquidacaoadquirente: TStringField
+      FieldName = 'adquirente'
+      Size = 30
+    end
+    object tblliquidacaocodigo_pedido: TStringField
+      FieldName = 'codigo_pedido'
+      Size = 30
+    end
+    object tblliquidacaonsu: TStringField
+      FieldName = 'nsu'
+      Size = 30
+    end
+    object tblliquidacaomeio_pagamento: TStringField
+      FieldName = 'meio_pagamento'
+      Size = 60
+    end
+    object tblliquidacaobandeira: TStringField
+      FieldName = 'bandeira'
+      Size = 30
+    end
+    object tblliquidacaoproduto: TStringField
+      FieldName = 'produto'
+      Size = 60
+    end
+    object tblliquidacaoestabelecimento: TStringField
+      FieldName = 'estabelecimento'
+      Size = 60
+    end
+    object tblliquidacaodata_pagamento: TDateField
+      FieldName = 'data_pagamento'
+    end
+    object tblliquidacaovalor_bruto_transacao: TFloatField
+      FieldName = 'valor_bruto_transacao'
+    end
+    object tblliquidacaovalor_bruto_parcela: TFloatField
+      FieldName = 'valor_bruto_parcela'
+    end
+    object tblliquidacaovalor_liquido_parcela: TFloatField
+      FieldName = 'valor_liquido_parcela'
+    end
+    object tblliquidacaotaxa_administrativa: TFloatField
+      FieldName = 'taxa_administrativa'
+    end
+    object tblliquidacaoparcela: TIntegerField
+      FieldName = 'parcela'
+    end
+    object tblliquidacaoplano: TIntegerField
+      FieldName = 'plano'
+    end
+    object tblliquidacaocodigo_banco: TStringField
+      FieldName = 'codigo_banco'
+      Size = 10
+    end
+    object tblliquidacaonome_banco: TStringField
+      FieldName = 'nome_banco'
+      Size = 40
+    end
+    object tblliquidacaoagencia: TStringField
+      FieldName = 'agencia'
+      Size = 10
+    end
+    object tblliquidacaoconta_corrente_poupanca: TStringField
+      FieldName = 'conta_corrente_poupanca'
+      Size = 30
+    end
+  end
 end

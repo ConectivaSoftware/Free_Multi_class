@@ -15,7 +15,11 @@ uses
    System.SysUtils,
    system.DateUtils,
    system.Classes,
+   Winapi.Windows,
    uwebtefmp;
+
+const
+  CDLLTef = 'E1_Tef01.dll';
 
 type
    //---------------------------------------------------------------------------
@@ -98,7 +102,6 @@ type
       //------------------------------------------------------------------------
       LRetornoTEF  : TRetornoPagamentoTEF;      // Retorno do pagamento TEF
       //------------------------------------------------------------------------
-      procedure SA_SalvarLog(titulo,dado: string);
       function SA_tpOperacaoADMToInt(tipo:ttpOperacaoADM):integer;
       function SA_ParsingTEF(conteudo : string):TTefRetorno;
       function SA_Opcoes(opcoes:string):TStringList;
@@ -165,22 +168,179 @@ type
   //----------------------------------------------------------------------------
   //   Declarações de bibliotecas contidas na DLL da ELGIN
   //----------------------------------------------------------------------------
-  function SetClientTCP(ip:PAnsiChar; porta:Integer):PAnsiChar;stdcall; external 'E1_Tef01.dll';
-  function ConfigurarDadosPDV(textoPinpad:PAnsiChar; versaoAC:PAnsiChar; nomeEstabelecimento:PAnsiChar; loja:PAnsiChar; identificadorPontoCaptura:PAnsiChar):PAnsiChar; stdcall; external 'E1_Tef01.dll';
-  function IniciarOperacaoTEF(dadosCaptura:PAnsiChar):PAnsiChar; stdcall; external 'E1_Tef01.dll';
-  function RecuperarOperacaoTEF(dadosCaptura:PAnsiChar):PAnsiChar; stdcall; external 'E1_Tef01.dll';
-  function RealizarPagamentoTEF(codigoOperacao:Integer; dadosCaptura:PAnsiChar; novaTransacao:Boolean):PAnsiChar;stdcall;external 'E1_Tef01.dll';
-  function RealizarPixTEF(dadosCaptura:PAnsiChar; novaTransacao:Boolean):PAnsiChar;stdcall;external 'E1_Tef01.dll';
-  function RealizarAdmTEF(codigoOperacao:Integer; dadosCaptura:PAnsiChar; novaTransacao:Boolean):PAnsiChar;stdcall;external 'E1_Tef01.dll';
-  function ConfirmarOperacaoTEF(id:Integer; acao:Integer):PAnsiChar; stdcall; external 'E1_Tef01.dll';
-  function FinalizarOperacaoTEF(id:Integer):PAnsiChar; stdcall; external 'E1_Tef01.dll';
-  function RealizarColetaPinPad(tipoColeta: integer; confirmar: boolean): PAnsiChar; stdcall; external 'E1_Tef01.dll';
-  function ConfirmarCapturaPinPad(tipoCaptura: integer; dadosCaptura: PAnsiChar): PAnsiChar; stdcall; external 'E1_Tef01.dll';
+  TFuncSetClientTCP           = function (ip:PAnsiChar; porta:Integer):PAnsiChar; cdecl;
+  TFuncConfigurarDadosPDV     = function (textoPinpad:PAnsiChar; versaoAC:PAnsiChar; nomeEstabelecimento:PAnsiChar; loja:PAnsiChar; identificadorPontoCaptura:PAnsiChar):PAnsiChar; cdecl;
+  TFuncIniciarOperacaoTEF     = function (dadosCaptura:PAnsiChar):PAnsiChar; cdecl;
+  TFuncRecuperarOperacaoTEF   = function (dadosCaptura:PAnsiChar):PAnsiChar; cdecl;
+  TFuncRealizarPagamentoTEF   = function (codigoOperacao:Integer; dadosCaptura:PAnsiChar; novaTransacao:Boolean):PAnsiChar; cdecl;
+  TFuncRealizarPixTEF         = function (dadosCaptura:PAnsiChar; novaTransacao:Boolean):PAnsiChar; cdecl;
+  TFuncRealizarAdmTEF         = function (codigoOperacao:Integer; dadosCaptura:PAnsiChar; novaTransacao:Boolean):PAnsiChar;
+  TFuncConfirmarOperacaoTEF   = function (id:Integer; acao:Integer):PAnsiChar;
+  TFuncFinalizarOperacaoTEF   = function (id:Integer):PAnsiChar;
+  TFuncRealizarColetaPinPad   = function (tipoColeta: integer; confirmar: boolean): PAnsiChar;
+  TFuncConfirmarCapturaPinPad = function (tipoCaptura: integer; dadosCaptura: PAnsiChar): PAnsiChar;
   //----------------------------------------------------------------------------
+  function SetClientTCP(ip:PAnsiChar; porta:Integer):PAnsiChar;
+  function ConfigurarDadosPDV(textoPinpad:PAnsiChar; versaoAC:PAnsiChar; nomeEstabelecimento:PAnsiChar; loja:PAnsiChar; identificadorPontoCaptura:PAnsiChar):PAnsiChar;
+  function IniciarOperacaoTEF(dadosCaptura:PAnsiChar):PAnsiChar;
+  function RecuperarOperacaoTEF(dadosCaptura:PAnsiChar):PAnsiChar;
+  function RealizarPagamentoTEF(codigoOperacao:Integer; dadosCaptura:PAnsiChar; novaTransacao:Boolean):PAnsiChar;
+  function RealizarPixTEF(dadosCaptura:PAnsiChar; novaTransacao:Boolean):PAnsiChar;
+  function RealizarAdmTEF(codigoOperacao:Integer; dadosCaptura:PAnsiChar; novaTransacao:Boolean):PAnsiChar;
+  function ConfirmarOperacaoTEF(id:Integer; acao:Integer):PAnsiChar;
+  function FinalizarOperacaoTEF(id:Integer):PAnsiChar;
+  function RealizarColetaPinPad(tipoColeta: integer; confirmar: boolean): PAnsiChar;
+  function ConfirmarCapturaPinPad(tipoCaptura: integer; dadosCaptura: PAnsiChar): PAnsiChar;
+  //----------------------------------------------------------------------------
+
 implementation
 
 { TElginTEF }
 
+//------------------------------------------------------------------------------
+function LoadDLL: THandle;
+begin
+  if not FileExists(CDLLTef) then
+    raise Exception.CreateFmt('DLL %s não encontrada.', [CDLLTef]);
+
+  Result := LoadLibrary(CDLLTef);
+  if Result = 0 then
+    raise Exception.CreateFmt('Não foi possível carregar a DLL %s', [CDLLTef]);
+end;
+//------------------------------------------------------------------------------
+
+function SetClientTCP(ip:PAnsiChar; porta:Integer):PAnsiChar;
+var
+   LHandle  : THandle;
+   LDLLFunc : TFuncSetClientTCP;
+begin
+   LHandle  := LoadDLL;
+   LDLLFunc := GetProcAddress(LHandle, 'SetClientTCP');
+   if @LDLLFunc = nil then
+      raise Exception.Create('Não foi possível carregar a função SetClientTCP');
+    Result := LDLLFunc(ip,porta);
+end;
+//------------------------------------------------------------------------------
+function ConfigurarDadosPDV(textoPinpad:PAnsiChar; versaoAC:PAnsiChar; nomeEstabelecimento:PAnsiChar; loja:PAnsiChar; identificadorPontoCaptura:PAnsiChar):PAnsiChar;
+var
+   LHandle  : THandle;
+   LDLLFunc : TFuncConfigurarDadosPDV;
+begin
+   LHandle  := LoadDLL;
+   LDLLFunc := GetProcAddress(LHandle, 'ConfigurarDadosPDV');
+   if @LDLLFunc = nil then
+      raise Exception.Create('Não foi possível carregar a função ConfigurarDadosPDV');
+    Result := LDLLFunc(textoPinpad,versaoAC,nomeEstabelecimento,loja,identificadorPontoCaptura);
+end;
+//------------------------------------------------------------------------------
+function IniciarOperacaoTEF(dadosCaptura:PAnsiChar):PAnsiChar;
+var
+   LHandle  : THandle;
+   LDLLFunc : TFuncIniciarOperacaoTEF;
+begin
+   LHandle  := LoadDLL;
+   LDLLFunc := GetProcAddress(LHandle, 'IniciarOperacaoTEF');
+   if @LDLLFunc = nil then
+      raise Exception.Create('Não foi possível carregar a função IniciarOperacaoTEF');
+    Result := LDLLFunc(dadosCaptura);
+end;
+//------------------------------------------------------------------------------
+function RecuperarOperacaoTEF(dadosCaptura:PAnsiChar):PAnsiChar;
+var
+   LHandle  : THandle;
+   LDLLFunc : TFuncRecuperarOperacaoTEF;
+begin
+   LHandle  := LoadDLL;
+   LDLLFunc := GetProcAddress(LHandle, 'RecuperarOperacaoTEF');
+   if @LDLLFunc = nil then
+      raise Exception.Create('Não foi possível carregar a função RecuperarOperacaoTEF');
+    Result := LDLLFunc(dadosCaptura);
+end;
+//------------------------------------------------------------------------------
+function RealizarPagamentoTEF(codigoOperacao:Integer; dadosCaptura:PAnsiChar; novaTransacao:Boolean):PAnsiChar;
+var
+   LHandle  : THandle;
+   LDLLFunc : TFuncRealizarPagamentoTEF;
+begin
+   LHandle  := LoadDLL;
+   LDLLFunc := GetProcAddress(LHandle, 'RealizarPagamentoTEF');
+   if @LDLLFunc = nil then
+      raise Exception.Create('Não foi possível carregar a função RealizarPagamentoTEF');
+    Result := LDLLFunc(codigoOperacao,dadosCaptura,novaTransacao);
+end;
+//------------------------------------------------------------------------------
+function RealizarPixTEF(dadosCaptura:PAnsiChar; novaTransacao:Boolean):PAnsiChar;
+var
+   LHandle  : THandle;
+   LDLLFunc : TFuncRealizarPixTEF;
+begin
+   LHandle  := LoadDLL;
+   LDLLFunc := GetProcAddress(LHandle, 'RealizarPixTEF');
+   if @LDLLFunc = nil then
+      raise Exception.Create('Não foi possível carregar a função RealizarPixTEF');
+    Result := LDLLFunc(dadosCaptura,novaTransacao);
+end;
+//------------------------------------------------------------------------------
+function RealizarAdmTEF(codigoOperacao:Integer; dadosCaptura:PAnsiChar; novaTransacao:Boolean):PAnsiChar;
+var
+   LHandle  : THandle;
+   LDLLFunc : TFuncRealizarAdmTEF;
+begin
+   LHandle  := LoadDLL;
+   LDLLFunc := GetProcAddress(LHandle, 'RealizarAdmTEF');
+   if @LDLLFunc = nil then
+      raise Exception.Create('Não foi possível carregar a função RealizarAdmTEF');
+    Result := LDLLFunc(codigoOperacao,dadosCaptura,novaTransacao);
+end;
+//------------------------------------------------------------------------------
+function ConfirmarOperacaoTEF(id:Integer; acao:Integer):PAnsiChar;
+var
+   LHandle  : THandle;
+   LDLLFunc : TFuncConfirmarOperacaoTEF;
+begin
+   LHandle  := LoadDLL;
+   LDLLFunc := GetProcAddress(LHandle, 'ConfirmarOperacaoTEF');
+   if @LDLLFunc = nil then
+      raise Exception.Create('Não foi possível carregar a função ConfirmarOperacaoTEF');
+    Result := LDLLFunc(id,acao);
+end;
+//------------------------------------------------------------------------------
+function FinalizarOperacaoTEF(id:Integer):PAnsiChar;
+var
+   LHandle  : THandle;
+   LDLLFunc : TFuncFinalizarOperacaoTEF;
+begin
+   LHandle  := LoadDLL;
+   LDLLFunc := GetProcAddress(LHandle, 'FinalizarOperacaoTEF');
+   if @LDLLFunc = nil then
+      raise Exception.Create('Não foi possível carregar a função FinalizarOperacaoTEF');
+    Result := LDLLFunc(id);
+end;
+//------------------------------------------------------------------------------
+function RealizarColetaPinPad(tipoColeta: integer; confirmar: boolean): PAnsiChar;
+var
+   LHandle  : THandle;
+   LDLLFunc : TFuncRealizarColetaPinPad;
+begin
+   LHandle  := LoadDLL;
+   LDLLFunc := GetProcAddress(LHandle, 'RealizarColetaPinPad');
+   if @LDLLFunc = nil then
+      raise Exception.Create('Não foi possível carregar a função RealizarColetaPinPad');
+    Result := LDLLFunc(tipoColeta,confirmar);
+end;
+//------------------------------------------------------------------------------
+function ConfirmarCapturaPinPad(tipoCaptura: integer; dadosCaptura: PAnsiChar): PAnsiChar;
+var
+   LHandle  : THandle;
+   LDLLFunc : TFuncConfirmarCapturaPinPad;
+begin
+   LHandle  := LoadDLL;
+   LDLLFunc := GetProcAddress(LHandle, 'ConfirmarCapturaPinPad');
+   if @LDLLFunc = nil then
+      raise Exception.Create('Não foi possível carregar a função ConfirmarCapturaPinPad');
+    Result := LDLLFunc(tipoCaptura,dadosCaptura);
+end;
+//------------------------------------------------------------------------------
 constructor TElginTEF.Create;
 begin
    LExecutando          := true;
@@ -198,11 +358,11 @@ end;
 procedure TElginTEF.SA_AdmCancelamento;
 var
    payload      : TJsonObject; // Objeto JSON para armazenar os dados da transação
-   inicializar  : boolean;  // Flag para sinalizar se foi possível inicializar o TEF ELGIN   
+   inicializar  : boolean;  // Flag para sinalizar se foi possível inicializar o TEF ELGIN
    resultado    : string;
    sair         : boolean;
-   RespReqTEF   : TTefRetorno; // Retorno da requisição inicial de ADM 
-   RespConsTEF  : TTefRetorno; // Retorno da requisição de ADM  
+   RespReqTEF   : TTefRetorno; // Retorno da requisição inicial de ADM
+   RespConsTEF  : TTefRetorno; // Retorno da requisição de ADM
    //---------------------------------------------------------------------------
    comprovanteDiferenciadoLoja     : TStringList;
    comprovanteDiferenciadoPortador : TStringList;
@@ -246,7 +406,7 @@ begin
       if not inicializar then
          begin
             resultado := UTF8ToString(FinalizarOperacaoTEF(1));
-            SA_SalvarLog('Resposta FINALIZAR',resultado);
+            SA_SalvarLog('Resposta FINALIZAR',resultado,GetCurrentDir+'\TEF_log\logTEFELGIN'+formatdatetime('yyyymmdd',date)+'.txt',LSalvarLog);
             frmwebtef.mensagem := 'Erro na inicialização do TEF';
             //------------------------------------------------------------------
             TThread.Synchronize(TThread.CurrentThread,
@@ -283,9 +443,9 @@ begin
                SA_Mostrar_Mensagem(true);
             end);
             //------------------------------------------------------------------
-            SA_SalvarLog('CANCELAMENTO ADM:',payload.ToString);
+            SA_SalvarLog('CANCELAMENTO ADM:',payload.ToString,GetCurrentDir+'\TEF_log\logTEFELGIN'+formatdatetime('yyyymmdd',date)+'.txt',LSalvarLog);
             resultado :=  UTF8ToString(RealizarAdmTEF( SA_tpOperacaoADMToInt(LtpOperacaoADM) , PAnsiChar(AnsiString(payload.ToString)), True));
-            SA_SalvarLog('Resposta CANCELAMENTO ADM:',resultado);
+            SA_SalvarLog('Resposta CANCELAMENTO ADM:',resultado,GetCurrentDir+'\TEF_log\logTEFELGIN'+formatdatetime('yyyymmdd',date)+'.txt',LSalvarLog);
             //------------------------------------------------------------------
             RespReqTEF  := SA_ParsingTEF(resultado);
             RespConsTEF := RespReqTEF;
@@ -458,10 +618,10 @@ begin
                               payload := TJsonObject.Create;
                               payload.AddPair('automacao_coleta_retorno', RespConsTEF.automacao_coleta_retorno);
                               payload.AddPair('automacao_coleta_sequencial', RespConsTEF.automacao_coleta_sequencial);
-                              SA_SalvarLog('CONSULTAR:',payload.ToString);   // Salvar LOG
+                              SA_SalvarLog('CONSULTAR:',payload.ToString,GetCurrentDir+'\TEF_log\logTEFELGIN'+formatdatetime('yyyymmdd',date)+'.txt',LSalvarLog);   // Salvar LOG
                               //------------------------------------------
                               resultado :=  UTF8ToString(RealizarAdmTEF( 0 , PAnsiChar(AnsiString(payload.ToString)), false));
-                              SA_SalvarLog('Resposta CONSULTAR:',resultado);   // Salvar LOG
+                              SA_SalvarLog('Resposta CONSULTAR:',resultado,GetCurrentDir+'\TEF_log\logTEFELGIN'+formatdatetime('yyyymmdd',date)+'.txt',LSalvarLog);   // Salvar LOG
                               RespConsTEF  := SA_ParsingTEF(resultado);
                               sair := false;
                               //------------------------------------------------
@@ -485,9 +645,9 @@ begin
                                     payload.AddPair('automacao_coleta_retorno', RespConsTEF.automacao_coleta_retorno);
                                     payload.AddPair('automacao_coleta_sequencial', RespConsTEF.automacao_coleta_sequencial);
                                     payload.AddPair('automacao_coleta_informacao', DadoColeta);
-                                    SA_SalvarLog('INFORMAR COLETA:',payload.ToString);   // Salvar LOG
+                                    SA_SalvarLog('INFORMAR COLETA:',payload.ToString,GetCurrentDir+'\TEF_log\logTEFELGIN'+formatdatetime('yyyymmdd',date)+'.txt',LSalvarLog);   // Salvar LOG
                                     resultado :=  UTF8ToString(RealizarAdmTEF( 0 , PAnsiChar(AnsiString(payload.ToString)), false));
-                                    SA_SalvarLog('Resposta INFORMAR COLETA:',resultado);   // Salvar LOG
+                                    SA_SalvarLog('Resposta INFORMAR COLETA:',resultado,GetCurrentDir+'\TEF_log\logTEFELGIN'+formatdatetime('yyyymmdd',date)+'.txt',LSalvarLog);   // Salvar LOG
                                     RespConsTEF   := SA_ParsingTEF(resultado);
                                     DadoColeta    := '';
                                  end
@@ -497,7 +657,7 @@ begin
                                     // Finalizar a operação
                                     //------------------------------------------
                                     resultado := UTF8ToString(FinalizarOperacaoTEF(1)); // Finalizando a operação de TEF
-                                    SA_SalvarLog('Resposta FINALIZAR:',resultado);   // Salvar LOG
+                                    SA_SalvarLog('Resposta FINALIZAR:',resultado,GetCurrentDir+'\TEF_log\logTEFELGIN'+formatdatetime('yyyymmdd',date)+'.txt',LSalvarLog);   // Salvar LOG
                                     sair := true;
                                     //------------------------------------------
                                  end;
@@ -511,10 +671,10 @@ begin
                         //   Verificar se há impressos a serem executados
                         //------------------------------------------------------
                         LSequencial := strtointdef(RespConsTEF.sequencial,0);
-                        SA_SalvarLog('CONFIRMAR:','Nro Sequencial = '+RespConsTEF.sequencial);   // Salvar LOG
+                        SA_SalvarLog('CONFIRMAR:','Nro Sequencial = '+RespConsTEF.sequencial,GetCurrentDir+'\TEF_log\logTEFELGIN'+formatdatetime('yyyymmdd',date)+'.txt',LSalvarLog);   // Salvar LOG
                         resultado   := UTF8ToString(ConfirmarOperacaoTEF(LSequencial,1));
 
-                        SA_SalvarLog('Resposta CONFIRMAR:',resultado);   // Salvar LOG
+                        SA_SalvarLog('Resposta CONFIRMAR:',resultado,GetCurrentDir+'\TEF_log\logTEFELGIN'+formatdatetime('yyyymmdd',date)+'.txt',LSalvarLog);   // Salvar LOG
 
                         LEstornado := true;
                         if RespConsTEF.comprovanteDiferenciadoLoja<>'' then
@@ -541,7 +701,7 @@ begin
                            end;
                         //------------------------------------------------------
                         resultado := UTF8ToString(FinalizarOperacaoTEF(1)); // Finalizando a operação de TEF
-                        SA_SalvarLog('Resposta FINALIZAR:',resultado);   // Salvar LOG
+                        SA_SalvarLog('Resposta FINALIZAR:',resultado,GetCurrentDir+'\TEF_log\logTEFELGIN'+formatdatetime('yyyymmdd',date)+'.txt',LSalvarLog);   // Salvar LOG
                         sair := true;
                         //------------------------------------------------------
                      end;
@@ -609,7 +769,7 @@ begin
       if not inicializar then
          begin
             resultado := UTF8ToString(FinalizarOperacaoTEF(1));
-            SA_SalvarLog('Resposta FINALIZAR',resultado);
+            SA_SalvarLog('Resposta FINALIZAR',resultado,GetCurrentDir+'\TEF_log\logTEFELGIN'+formatdatetime('yyyymmdd',date)+'.txt',LSalvarLog);
             frmwebtef.mensagem := 'Erro na inicialização do TEF';
             //------------------------------------------------------------------
             TThread.Synchronize(TThread.CurrentThread,
@@ -644,9 +804,9 @@ begin
                SA_Mostrar_Mensagem(true);
             end);
             //------------------------------------------------------------------
-            SA_SalvarLog('ADM:',payload.ToString);
+            SA_SalvarLog('ADM:',payload.ToString,GetCurrentDir+'\TEF_log\logTEFELGIN'+formatdatetime('yyyymmdd',date)+'.txt',LSalvarLog);
             resultado :=  UTF8ToString(RealizarAdmTEF( SA_tpOperacaoADMToInt(LtpOperacaoADM) , PAnsiChar(AnsiString(payload.ToString)), True));
-            SA_SalvarLog('Resposta ADM:',resultado);
+            SA_SalvarLog('Resposta ADM:',resultado,GetCurrentDir+'\TEF_log\logTEFELGIN'+formatdatetime('yyyymmdd',date)+'.txt',LSalvarLog);
             //------------------------------------------------------------------
             RespReqTEF  := SA_ParsingTEF(resultado);
             //------------------------------------------------------------------
@@ -656,7 +816,7 @@ begin
                   //   Mostrar a mensagem de erro na tela
                   //------------------------------------------------------------
                   resultado := UTF8ToString(FinalizarOperacaoTEF(1)); // Finalizando a operação de TEF
-                  SA_SalvarLog('Resposta FINALIZAR:',resultado);   // Salvar LOG
+                  SA_SalvarLog('Resposta FINALIZAR:',resultado,GetCurrentDir+'\TEF_log\logTEFELGIN'+formatdatetime('yyyymmdd',date)+'.txt',LSalvarLog);   // Salvar LOG
                   if RespReqTEF.mensagemResultado<>'' then   // Se o TEF mandou exibir alguma mensagem
                      frmwebtef.mensagem := RespReqTEF.mensagemResultado
                   else   // Sem mensagem nenhuma, criando uma padrão
@@ -856,9 +1016,9 @@ begin
                                     payload.AddPair('automacao_coleta_retorno', RespConsTEF.automacao_coleta_retorno);
                                     payload.AddPair('automacao_coleta_sequencial', RespConsTEF.automacao_coleta_sequencial);
                                     payload.AddPair('automacao_coleta_informacao', DadoColeta);
-                                    SA_SalvarLog('INFORMAR COLETA:',payload.ToString);   // Salvar LOG
+                                    SA_SalvarLog('INFORMAR COLETA:',payload.ToString,GetCurrentDir+'\TEF_log\logTEFELGIN'+formatdatetime('yyyymmdd',date)+'.txt',LSalvarLog);   // Salvar LOG
                                     resultado :=  UTF8ToString(RealizarAdmTEF( 0 , PAnsiChar(AnsiString(payload.ToString)), false));
-                                    SA_SalvarLog('Resposta INFORMAR COLETA:',resultado);   // Salvar LOG
+                                    SA_SalvarLog('Resposta INFORMAR COLETA:',resultado,GetCurrentDir+'\TEF_log\logTEFELGIN'+formatdatetime('yyyymmdd',date)+'.txt',LSalvarLog);   // Salvar LOG
                                     RespConsTEF  := SA_ParsingTEF(resultado);
                                     sair := false;
                                     //------------------------------------------
@@ -881,14 +1041,14 @@ begin
                                     payload.AddPair('automacao_coleta_retorno', '9');
                                     payload.AddPair('automacao_coleta_sequencial', RespConsTEF.automacao_coleta_sequencial);
                                     //------------------------------------------
-                                    SA_SalvarLog('CANCELAR COLETA:',payload.ToString);
+                                    SA_SalvarLog('CANCELAR COLETA:',payload.ToString,GetCurrentDir+'\TEF_log\logTEFELGIN'+formatdatetime('yyyymmdd',date)+'.txt',LSalvarLog);
                                     //------------------------------------------
                                     resultado :=  UTF8ToString(RealizarAdmTEF( 0 , PAnsiChar(AnsiString(payload.ToString)), false));
                                     //------------------------------------------
-                                    SA_SalvarLog('Resposta CANCELAR COLETA:',resultado);
+                                    SA_SalvarLog('Resposta CANCELAR COLETA:',resultado,GetCurrentDir+'\TEF_log\logTEFELGIN'+formatdatetime('yyyymmdd',date)+'.txt',LSalvarLog);
                                     //--------------------------------------------
                                     resultado := UTF8ToString(FinalizarOperacaoTEF(1)); // Finalizando a operação de TEF
-                                    SA_SalvarLog('Resposta FINALIZAR:',resultado);   // Salvar LOG
+                                    SA_SalvarLog('Resposta FINALIZAR:',resultado,GetCurrentDir+'\TEF_log\logTEFELGIN'+formatdatetime('yyyymmdd',date)+'.txt',LSalvarLog);   // Salvar LOG
                                     RespConsTEF  := SA_ParsingTEF(resultado);
                                     frmwebtef.mensagem := 'Operação cancelada pelo operador...';
                                     SA_Mostrar_Mensagem(true);
@@ -917,10 +1077,10 @@ begin
                               payload := TJsonObject.Create;
                               payload.AddPair('automacao_coleta_retorno', RespConsTEF.automacao_coleta_retorno);
                               payload.AddPair('automacao_coleta_sequencial', RespConsTEF.automacao_coleta_sequencial);
-                              SA_SalvarLog('CONSULTAR:',payload.ToString);   // Salvar LOG
+                              SA_SalvarLog('CONSULTAR:',payload.ToString,GetCurrentDir+'\TEF_log\logTEFELGIN'+formatdatetime('yyyymmdd',date)+'.txt',LSalvarLog);   // Salvar LOG
                               //------------------------------------------------
                               resultado :=  UTF8ToString(RealizarAdmTEF( 0 , PAnsiChar(AnsiString(payload.ToString)), false));
-                              SA_SalvarLog('Resposta CONSULTAR:',resultado);   // Salvar LOG
+                              SA_SalvarLog('Resposta CONSULTAR:',resultado,GetCurrentDir+'\TEF_log\logTEFELGIN'+formatdatetime('yyyymmdd',date)+'.txt',LSalvarLog);   // Salvar LOG
                               RespConsTEF  := SA_ParsingTEF(resultado);
                               sair := false;
                               //------------------------------------------------
@@ -962,7 +1122,7 @@ begin
                               frmwebtef.mensagem := 'Finalizando conexão...';
                               SA_Mostrar_Mensagem(true);
                               resultado := UTF8ToString(FinalizarOperacaoTEF(1)); // Finalizando a operação de TEF
-                              SA_SalvarLog('Resposta FINALIZAR:',resultado);   // Salvar LOG
+                              SA_SalvarLog('Resposta FINALIZAR:',resultado,GetCurrentDir+'\TEF_log\logTEFELGIN'+formatdatetime('yyyymmdd',date)+'.txt',LSalvarLog);   // Salvar LOG
                               //------------------------------------------------
                               if RespConsTEF.mensagemResultado<>'' then
                                  frmwebtef.mensagem := RespConsTEF.mensagemResultado
@@ -1157,12 +1317,12 @@ begin
    payload.AddPair('nomeEstabelecimento',LTEFEstabelecimento);
    payload.AddPair('identificadorPontoCaptura',LTEFIdCliente);
    //---------------------------------------------------------------------------
-   SA_SalvarLog('INICIALIZAR',payload.ToString);
+   SA_SalvarLog('INICIALIZAR',payload.ToString,GetCurrentDir+'\TEF_log\logTEFELGIN'+formatdatetime('yyyymmdd',date)+'.txt',LSalvarLog);
 
    resultado := UTF8ToString(IniciarOperacaoTEF(PAnsiChar(AnsiString(payload.ToString))));
    RespJSON  := TJSonObject.ParseJSONValue(TEncoding.UTF8.GetBytes( resultado ),0) as TJSONValue;
    payload.Free;
-   SA_SalvarLog('INICIALIZAR Resposta',resultado);
+   SA_SalvarLog('INICIALIZAR Resposta',resultado,GetCurrentDir+'\TEF_log\logTEFELGIN'+formatdatetime('yyyymmdd',date)+'.txt',LSalvarLog);
    codigoTEF := 0;
    try
       codigoTEF := RespJSON.GetValue<integer>('codigo',0);
@@ -1253,7 +1413,7 @@ begin
       if not inicializar then
          begin
             resultado := UTF8ToString(FinalizarOperacaoTEF(1));
-            SA_SalvarLog('Resposta FINALIZAR:',resultado);
+            SA_SalvarLog('Resposta FINALIZAR:',resultado,GetCurrentDir+'\TEF_log\logTEFELGIN'+formatdatetime('yyyymmdd',date)+'.txt',LSalvarLog);
             frmwebtef.mensagem := 'Erro na inicialização do TEF';
             //------------------------------------------------------------------
             TThread.Synchronize(TThread.CurrentThread,procedure
@@ -1285,9 +1445,9 @@ begin
             SA_Mostrar_Mensagem(true);
          end);
       //------------------------------------------------------------------------
-      SA_SalvarLog('VENDER:',payload.ToString);
+      SA_SalvarLog('VENDER:',payload.ToString,GetCurrentDir+'\TEF_log\logTEFELGIN'+formatdatetime('yyyymmdd',date)+'.txt',LSalvarLog);
       resultado   := UTF8ToString(RealizarPixTEF(PAnsiChar(AnsiString(payload.ToString)), true));
-      SA_SalvarLog('Resposta VENDER:',resultado);
+      SA_SalvarLog('Resposta VENDER:',resultado,GetCurrentDir+'\TEF_log\logTEFELGIN'+formatdatetime('yyyymmdd',date)+'.txt',LSalvarLog);
       //------------------------------------------------------------------------
       RespReqTEF  := SA_ParsingTEF(resultado);
       //------------------------------------------------------------------------
@@ -1310,7 +1470,7 @@ begin
                            end);
                         //------------------------------------------------------
                         resultado := UTF8ToString(FinalizarOperacaoTEF(1));
-                        SA_SalvarLog('Resposta FINALIZAR:',resultado);
+                        SA_SalvarLog('Resposta FINALIZAR:',resultado,GetCurrentDir+'\TEF_log\logTEFELGIN'+formatdatetime('yyyymmdd',date)+'.txt',LSalvarLog);
                         //------------------------------------------------------
                         SA_AtivarBTCancelar;
                         //------------------------------------------------------
@@ -1364,11 +1524,11 @@ begin
                               payload.AddPair('automacao_coleta_retorno',RespReqTEF.automacao_coleta_retorno);
                               payload.AddPair('automacao_coleta_sequencial',RespReqTEF.automacao_coleta_sequencial);
                               //------------------------------------------------
-                              SA_SalvarLog('CONSULTA PIX:',payload.ToString);
+                              SA_SalvarLog('CONSULTA PIX:',payload.ToString,GetCurrentDir+'\TEF_log\logTEFELGIN'+formatdatetime('yyyymmdd',date)+'.txt',LSalvarLog);
                               //------------------------------------------------
                               resultado   := UTF8ToString( RealizarPixTEF(PAnsiChar(AnsiString(payload.ToString)), false));
                               //------------------------------------------------
-                              SA_SalvarLog('Resposta CONSULTA PIX:',resultado);
+                              SA_SalvarLog('Resposta CONSULTA PIX:',resultado,GetCurrentDir+'\TEF_log\logTEFELGIN'+formatdatetime('yyyymmdd',date)+'.txt',LSalvarLog);
                               //------------------------------------------------
                               RespReqTEF  := SA_ParsingTEF(resultado);
                               //------------------------------------------------
@@ -1407,11 +1567,11 @@ begin
                                     payload.AddPair('automacao_coleta_sequencial', RespReqTEF.automacao_coleta_sequencial);
                                     payload.AddPair('automacao_coleta_informacao', DadoColeta);
                                     //------------------------------------------
-                                    SA_SalvarLog('EVIAR TIPO PIX:',payload.ToString);
+                                    SA_SalvarLog('EVIAR TIPO PIX:',payload.ToString,GetCurrentDir+'\TEF_log\logTEFELGIN'+formatdatetime('yyyymmdd',date)+'.txt',LSalvarLog);
                                     //------------------------------------------
                                     resultado   := UTF8ToString( RealizarPixTEF(PAnsiChar(AnsiString(payload.ToString)), false));
                                     //------------------------------------------
-                                    SA_SalvarLog('Resposta EVIAR TIPO PIX:',resultado);
+                                    SA_SalvarLog('Resposta EVIAR TIPO PIX:',resultado,GetCurrentDir+'\TEF_log\logTEFELGIN'+formatdatetime('yyyymmdd',date)+'.txt',LSalvarLog);
                                     //------------------------------------------
                                     RespReqTEF  := SA_ParsingTEF(resultado);
                                     //------------------------------------------
@@ -1424,16 +1584,16 @@ begin
                                     payload := TJsonObject.Create;
                                     payload.AddPair('automacao_coleta_retorno', '9');
                                     //------------------------------------------
-                                    SA_SalvarLog('CANCELAR PIX:',payload.ToString);
+                                    SA_SalvarLog('CANCELAR PIX:',payload.ToString,GetCurrentDir+'\TEF_log\logTEFELGIN'+formatdatetime('yyyymmdd',date)+'.txt',LSalvarLog);
                                     //------------------------------------------
                                     resultado   := UTF8ToString( RealizarPixTEF(PAnsiChar(AnsiString(payload.ToString)), false));
                                     //------------------------------------------
-                                    SA_SalvarLog('Resposta CANCELAR PIX:',resultado);
+                                    SA_SalvarLog('Resposta CANCELAR PIX:',resultado,GetCurrentDir+'\TEF_log\logTEFELGIN'+formatdatetime('yyyymmdd',date)+'.txt',LSalvarLog);
                                     //------------------------------------------
                                     resultado := UTF8ToString(FinalizarOperacaoTEF(1));
                                     //------------------------------------------
                                     RespReqTEF  := SA_ParsingTEF(resultado);
-                                    SA_SalvarLog('Resposta FINALIZAR:',resultado);
+                                    SA_SalvarLog('Resposta FINALIZAR:',resultado,GetCurrentDir+'\TEF_log\logTEFELGIN'+formatdatetime('yyyymmdd',date)+'.txt',LSalvarLog);
                                     //------------------------------------------
                                  end;
                               //------------------------------------------------
@@ -1458,11 +1618,11 @@ begin
                   //------------------------------------------------------------
                   resultado   := UTF8ToString(ConfirmarOperacaoTEF(LSequencial,1));  // Confirmar operação
                   //------------------------------------------------------------
-                  SA_SalvarLog('Resposta CONFIRMAR:',resultado);
+                  SA_SalvarLog('Resposta CONFIRMAR:',resultado,GetCurrentDir+'\TEF_log\logTEFELGIN'+formatdatetime('yyyymmdd',date)+'.txt',LSalvarLog);
                   //------------------------------------------------------------
                   resultado := UTF8ToString(FinalizarOperacaoTEF(1));   // Finalizando a transação
                   //------------------------------------------------------------
-                  SA_SalvarLog('Resposta FINALIZAR:',resultado);
+                  SA_SalvarLog('Resposta FINALIZAR:',resultado,GetCurrentDir+'\TEF_log\logTEFELGIN'+formatdatetime('yyyymmdd',date)+'.txt',LSalvarLog);
                   //------------------------------------------------------------
                   //   TEF confirmado
                   //------------------------------------------------------------
@@ -1726,7 +1886,7 @@ begin
       if not inicializar then
          begin
             resultado := UTF8ToString(FinalizarOperacaoTEF(1));
-            SA_SalvarLog('FINALIZAR:',resultado);
+            SA_SalvarLog('FINALIZAR:',resultado,GetCurrentDir+'\TEF_log\logTEFELGIN'+formatdatetime('yyyymmdd',date)+'.txt',LSalvarLog);
             frmwebtef.mensagem := 'Erro na inicialização do TEF';
             TThread.Synchronize(TThread.CurrentThread,SA_MostramensagemT);
             //---------------------------------------------------------------------
@@ -1760,9 +1920,9 @@ begin
       frmwebtef.mensagem := 'Solicitando pagamento...';
       TThread.Synchronize(TThread.CurrentThread,SA_MostramensagemT);
       //---------------------------------------------------------------------------
-      SA_SalvarLog('VENDER:',payload.ToString);
+      SA_SalvarLog('VENDER:',payload.ToString,GetCurrentDir+'\TEF_log\logTEFELGIN'+formatdatetime('yyyymmdd',date)+'.txt',LSalvarLog);
       resultado   := UTF8ToString(RealizarPagamentoTEF( PagamentoELGIN.tipoCartao , PAnsiChar(AnsiString(payload.ToString)), True));
-      SA_SalvarLog('Resposta VENDER',resultado);
+      SA_SalvarLog('Resposta VENDER',resultado,GetCurrentDir+'\TEF_log\logTEFELGIN'+formatdatetime('yyyymmdd',date)+'.txt',LSalvarLog);
       RespReqTEF  := SA_ParsingTEF(resultado);
       retorno     := RespReqTEF.retorno;  // Pegar o retorno
       //---------------------------------------------------------------------------
@@ -1772,7 +1932,7 @@ begin
             //   Mostrar a mensagem de erro na tela
             //---------------------------------------------------------------------
             resultado := UTF8ToString(FinalizarOperacaoTEF(1)); // Finalizando a operação de TEF
-            SA_SalvarLog('Resposta FINALIZAR TEF:',resultado);   // Salvar LOG
+            SA_SalvarLog('Resposta FINALIZAR TEF:',resultado,GetCurrentDir+'\TEF_log\logTEFELGIN'+formatdatetime('yyyymmdd',date)+'.txt',LSalvarLog);   // Salvar LOG
             if RespReqTEF.mensagemResultado<>'' then   // Se o TEF mandou exibir alguma mensagem
                frmwebtef.mensagem := RespReqTEF.mensagemResultado
             else   // Sem mensagem nenhuma, criando uma padrão
@@ -1800,14 +1960,14 @@ begin
             payload.AddPair('sequencial', LSequencial.ToString);  // Executando o cancelamento
             payload.AddPair('automacao_coleta_retorno', '9');
             //---------------------------------------------------------------------
-            SA_SalvarLog('CANCELAR:',payload.ToString);
+            SA_SalvarLog('CANCELAR:',payload.ToString,GetCurrentDir+'\TEF_log\logTEFELGIN'+formatdatetime('yyyymmdd',date)+'.txt',LSalvarLog);
             //---------------------------------------------------------------------
             resultado   := UTF8ToString(RealizarPagamentoTEF( 0 , PAnsiChar(AnsiString(payload.ToString)), false));
             //---------------------------------------------------------------------
-            SA_SalvarLog('Resposta CANCELAR:',resultado);
+            SA_SalvarLog('Resposta CANCELAR:',resultado,GetCurrentDir+'\TEF_log\logTEFELGIN'+formatdatetime('yyyymmdd',date)+'.txt',LSalvarLog);
             //---------------------------------------------------------------------
             resultado := UTF8ToString(FinalizarOperacaoTEF(1));   // Finalizando a transação
-            SA_SalvarLog('Resposta FINALIZAR:',resultado);
+            SA_SalvarLog('Resposta FINALIZAR:',resultado,GetCurrentDir+'\TEF_log\logTEFELGIN'+formatdatetime('yyyymmdd',date)+'.txt',LSalvarLog);
             //---------------------------------------------------------------------
             TThread.Synchronize(TThread.CurrentThread,SA_MostrarBtCancelarT);
             while not frmwebtef.Cancelar do   // Esperando que o operador cancelar
@@ -1878,11 +2038,11 @@ begin
                                     frmwebtef.mensagem := 'Enviando dados ao TEF';
                                     TThread.Synchronize(TThread.CurrentThread,SA_MostramensagemT);
                                     //---------------------------------------------
-                                    SA_SalvarLog('COLETA:','{"automacao_coleta_sequencial":"'+RespConsTEF.automacao_coleta_sequencial+'","automacao_coleta_retorno":"'+RespConsTEF.automacao_coleta_retorno+'","automacao_coleta_informacao":"'+Qtde_Parcelas+'"}');
+                                    SA_SalvarLog('COLETA:','{"automacao_coleta_sequencial":"'+RespConsTEF.automacao_coleta_sequencial+'","automacao_coleta_retorno":"'+RespConsTEF.automacao_coleta_retorno+'","automacao_coleta_informacao":"'+Qtde_Parcelas+'"}',GetCurrentDir+'\TEF_log\logTEFELGIN'+formatdatetime('yyyymmdd',date)+'.txt',LSalvarLog);
                                     //---------------------------------------------
                                     resultado   := UTF8ToString(RealizarPagamentoTEF( 0 , PAnsiChar(AnsiString('{"automacao_coleta_sequencial":"'+RespConsTEF.automacao_coleta_sequencial+'","automacao_coleta_retorno":"'+RespConsTEF.automacao_coleta_retorno+'","automacao_coleta_informacao":"'+Qtde_Parcelas+'"}')), false));
                                     //---------------------------------------------
-                                    SA_SalvarLog('Resposta COLETA:',resultado);
+                                    SA_SalvarLog('Resposta COLETA:',resultado,GetCurrentDir+'\TEF_log\logTEFELGIN'+formatdatetime('yyyymmdd',date)+'.txt',LSalvarLog);
                                     //---------------------------------------------
                                     RespconsTEF   := SA_ParsingTEF(resultado);
                                     Consultar_TEF := false;
@@ -1923,11 +2083,11 @@ begin
                                     payload.AddPair('automacao_coleta_retorno', RespConsTEF.automacao_coleta_retorno);
                                     payload.AddPair('automacao_coleta_informacao', opcoesColeta[opcaoColeta-1]);
                                     //----------------------------------------------
-                                    SA_SalvarLog('COLETA:',payload.ToString);
+                                    SA_SalvarLog('COLETA:',payload.ToString,GetCurrentDir+'\TEF_log\logTEFELGIN'+formatdatetime('yyyymmdd',date)+'.txt',LSalvarLog);
                                     //----------------------------------------------
                                     resultado   := UTF8ToString(RealizarPagamentoTEF( 0 , PAnsiChar(AnsiString(payload.ToString)), false));
                                     //----------------------------------------------
-                                    SA_SalvarLog('Resposta COLETA:',resultado);
+                                    SA_SalvarLog('Resposta COLETA:',resultado,GetCurrentDir+'\TEF_log\logTEFELGIN'+formatdatetime('yyyymmdd',date)+'.txt',LSalvarLog);
                                     //----------------------------------------------
                                     RespconsTEF  := SA_ParsingTEF(resultado);
                                     Consultar_TEF := false;
@@ -1964,11 +2124,11 @@ begin
                               payload.AddPair('automacao_coleta_retorno', RespConsTEF.automacao_coleta_retorno);
                               payload.AddPair('automacao_coleta_informacao', Qtde_Parcelas);
                               //------------------------------------------------
-                              SA_SalvarLog('COLETA:',payload.ToString);
+                              SA_SalvarLog('COLETA:',payload.ToString,GetCurrentDir+'\TEF_log\logTEFELGIN'+formatdatetime('yyyymmdd',date)+'.txt',LSalvarLog);
                               //------------------------------------------------
                               resultado   := UTF8ToString(RealizarPagamentoTEF( 0 , PAnsiChar(AnsiString(payload.ToString)), false));
                               //------------------------------------------------
-                              SA_SalvarLog('Resposta COLETA:',resultado);
+                              SA_SalvarLog('Resposta COLETA:',resultado,GetCurrentDir+'\TEF_log\logTEFELGIN'+formatdatetime('yyyymmdd',date)+'.txt',LSalvarLog);
                               //------------------------------------------------
                               RespconsTEF  := SA_ParsingTEF(resultado);
                               Consultar_TEF := false;
@@ -2022,11 +2182,11 @@ begin
                                     payload.AddPair('automacao_coleta_retorno', RespConsTEF.automacao_coleta_retorno);
                                     payload.AddPair('automacao_coleta_informacao', Qtde_Parcelas);
                                     //---------------------------------------------
-                                    SA_SalvarLog('COLETA:',payload.ToString);
+                                    SA_SalvarLog('COLETA:',payload.ToString,GetCurrentDir+'\TEF_log\logTEFELGIN'+formatdatetime('yyyymmdd',date)+'.txt',LSalvarLog);
                                     //---------------------------------------------
                                     resultado   := UTF8ToString(RealizarPagamentoTEF( 0 , PAnsiChar(AnsiString(payload.ToString)), false));
                                     //---------------------------------------------
-                                    SA_SalvarLog('Resposta COLETA:',resultado);
+                                    SA_SalvarLog('Resposta COLETA:',resultado,GetCurrentDir+'\TEF_log\logTEFELGIN'+formatdatetime('yyyymmdd',date)+'.txt',LSalvarLog);
                                     //---------------------------------------------
                                     RespconsTEF  := SA_ParsingTEF(resultado);
                                     Consultar_TEF := false;
@@ -2082,13 +2242,13 @@ begin
                                     //---------------------------------------------
                                     resultado   := UTF8ToString(ConfirmarOperacaoTEF(LSequencial,0));
                                     //---------------------------------------------
-                                    SA_SalvarLog('Resposta CANCELAR:',resultado);
+                                    SA_SalvarLog('Resposta CANCELAR:',resultado,GetCurrentDir+'\TEF_log\logTEFELGIN'+formatdatetime('yyyymmdd',date)+'.txt',LSalvarLog);
                                     //---------------------------------------------
                                  end;
                               //---------------------------------------------------
                               resultado := UTF8ToString(FinalizarOperacaoTEF(1));   // Finalizando a transação
                               //---------------------------------------------------
-                              SA_SalvarLog('Resposta FINALIZAR:',resultado);
+                              SA_SalvarLog('Resposta FINALIZAR:',resultado,GetCurrentDir+'\TEF_log\logTEFELGIN'+formatdatetime('yyyymmdd',date)+'.txt',LSalvarLog);
                               //---------------------------------------------------
                               if RespConsTEF.mensagemResultado<>'' then
                                  frmwebtef.mensagem := RespConsTEF.mensagemResultado
@@ -2123,11 +2283,11 @@ begin
                               //---------------------------------------------------
                               resultado   := UTF8ToString(ConfirmarOperacaoTEF(LSequencial,1));  // Confirmar operação
                               //---------------------------------------------------
-                              SA_SalvarLog('Resposta CONFIRMAR:',resultado);
+                              SA_SalvarLog('Resposta CONFIRMAR:',resultado,GetCurrentDir+'\TEF_log\logTEFELGIN'+formatdatetime('yyyymmdd',date)+'.txt',LSalvarLog);
                               //---------------------------------------------------
                               resultado := UTF8ToString(FinalizarOperacaoTEF(1));   // Finalizando a transação
                               //---------------------------------------------------
-                              SA_SalvarLog('Resposta FINALIZAR:',resultado);
+                              SA_SalvarLog('Resposta FINALIZAR:',resultado,GetCurrentDir+'\TEF_log\logTEFELGIN'+formatdatetime('yyyymmdd',date)+'.txt',LSalvarLog);
                               //---------------------------------------------------
                               //   TEF confirmado
                               //---------------------------------------------------
@@ -2250,11 +2410,11 @@ begin
                         payload.AddPair('automacao_coleta_sequencial',RespConsTEF.automacao_coleta_sequencial);
                         payload.AddPair('sequencial', LSequencial.ToString);
                         //---------------------------------------------------------
-                        SA_SalvarLog('CONSULTA:',payload.ToString);
+                        SA_SalvarLog('CONSULTA:',payload.ToString,GetCurrentDir+'\TEF_log\logTEFELGIN'+formatdatetime('yyyymmdd',date)+'.txt',LSalvarLog);
                         //---------------------------------------------------------
                         resultado   := UTF8ToString(RealizarPagamentoTEF( 0 , PAnsiChar(AnsiString(payload.ToString)), false));
                         //---------------------------------------------------------
-                        SA_SalvarLog('Resposta CONSULTA:',resultado);
+                        SA_SalvarLog('Resposta CONSULTA:',resultado,GetCurrentDir+'\TEF_log\logTEFELGIN'+formatdatetime('yyyymmdd',date)+'.txt',LSalvarLog);
                         //---------------------------------------------------------
                         RespConsTEF  := SA_ParsingTEF(resultado);
                         //---------------------------------------------------------
@@ -2270,13 +2430,13 @@ begin
                               //---------------------------------------------------
                               resultado   := UTF8ToString(ConfirmarOperacaoTEF(LSequencial,0));
                               //---------------------------------------------------
-                              SA_SalvarLog('Resposta CANCELAR:',resultado);
+                              SA_SalvarLog('Resposta CANCELAR:',resultado,GetCurrentDir+'\TEF_log\logTEFELGIN'+formatdatetime('yyyymmdd',date)+'.txt',LSalvarLog);
                               //---------------------------------------------------
                            end;
                         //---------------------------------------------------------
                         resultado := UTF8ToString(FinalizarOperacaoTEF(1));   // Finalizando a transação
                         //---------------------------------------------------------
-                        SA_SalvarLog('Resposta FINALIZAR:',resultado);
+                        SA_SalvarLog('Resposta FINALIZAR:',resultado,GetCurrentDir+'\TEF_log\logTEFELGIN'+formatdatetime('yyyymmdd',date)+'.txt',LSalvarLog);
                         //---------------------------------------------------------
                      end;
 
@@ -2328,13 +2488,6 @@ begin
 
       end;
 end;
-
-procedure TElginTEF.SA_SalvarLog(titulo,dado: string);
-begin
-   if LSalvarLog then
-      SA_Salva_Arquivo_Incremental(titulo + ' ' + formatdatetime('dd/mm/yyyy hh:mm:ss',now)+#13+dado,GetCurrentDir+'\TEF_log\logTEFELGIN'+formatdatetime('yyyymmdd',date)+'.txt');
-end;
-
 
 function TElginTEF.SA_tpOperacaoADMToInt(tipo: ttpOperacaoADM): integer;
 begin

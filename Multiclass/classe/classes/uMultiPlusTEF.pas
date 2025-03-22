@@ -3,6 +3,8 @@ unit uMultiPlusTEF;
 interface
 
 uses
+   System.UITypes,
+   WinApi.Windows,
    ACBrPosPrinter,
    ACBrImage,
    ACBrDelphiZXingQRCode,
@@ -20,6 +22,9 @@ uses
    ACBrAbecsPinPad,
    ACBrDeviceSerial,
    uwebtefmp;
+
+const
+  CDLLTef = 'TefClientmc.dll';
 
 type
    //---------------------------------------------------------------------------
@@ -116,7 +121,6 @@ type
          //---------------------------------------------------------------------
          LConfigPinPad         : TKSConfigPinPad;            // Configuração do PINPAD
          //---------------------------------------------------------------------
-         procedure SA_SalvarLog(titulo,dado: string);
          function SA_TpCartaoOperacaoTEFtoINT(tipoCartao : TtpMultiplusFormaPgto):integer;
          function SA_TpCartaoOperacaoTEFtoSTR(tipoCartao: TtpMultiplusFormaPgto): string;
          function SA_RetornoErro(codigo:integer):string;
@@ -180,7 +184,41 @@ type
          property Impressora           : TKSConfigImpressora     read LImpressora    write LImpressora;  // Configuração da impressora
          //---------------------------------------------------------------------
    end;
+
+   TFuncIniciaFuncaoMCInterativo = function( iComando         : Integer;
+                                  sCnpjCliente     : PAnsiChar;
+                                  iParcela         : Integer;
+                                  sCupom           : PAnsiChar;
+                                  sValor           : PAnsiChar;
+                                  sNsu             : PAnsiChar;
+                                  sData            : PAnsiChar;
+                                  sNumeroPDV       : PAnsiChar;
+                                  sCodigoLoja      : PAnsiChar;
+                                  sTipoComunicacao : Integer;
+                                  sParametro       : PAnsiChar
+                                  ): Integer; cdecl;
+
+   TFuncAguardaFuncaoMCInterativo = function: PAnsiChar; cdecl;
+
+   TFuncContinuaFuncaoMCInterativo = function(sInformacao: PAnsiChar): Integer; cdecl;
+
+   TFuncCancelarFluxoMCInterativo = function: Integer; cdecl;
+
+   TFuncFinalizaFuncaoMCInterativo = function ( iComando         : Integer;
+                                     sCnpjCliente     : PAnsiChar;
+                                     iParcela         : Integer;
+                                     sCupom           : PAnsiChar;
+                                     sValor           : PAnsiChar;
+                                     sNsu             : PAnsiChar;
+                                     sData            : PAnsiChar;
+                                     sNumeroPDV       : PAnsiChar;
+                                     sCodigoLoja      : PAnsiChar;
+                                     sTipoComunicacao : Integer;
+                                     sParametro       : PAnsiChar
+                                     ): Integer; cdecl;
+
    //---------------------------------------------------------------------------
+
    function IniciaFuncaoMCInterativo( iComando         : Integer;
                                       sCnpjCliente     : PAnsiChar;
                                       iParcela         : Integer;
@@ -192,11 +230,92 @@ type
                                       sCodigoLoja      : PAnsiChar;
                                       sTipoComunicacao : Integer;
                                       sParametro       : PAnsiChar
-                                      ): Integer; stdcall; external 'TefClientmc.dll';
+                                      ): Integer;
 
-function AguardaFuncaoMCInterativo(): PAnsiChar; stdcall; external 'TefClientmc.dll';
 
-function ContinuaFuncaoMCInterativo(sInformacao: PAnsiChar): Integer; stdcall; external 'TefClientmc.dll';
+   function AguardaFuncaoMCInterativo(): PAnsiChar;
+
+   function ContinuaFuncaoMCInterativo(sInformacao: PAnsiChar): Integer;
+
+   function FinalizaFuncaoMCInterativo( iComando         : Integer;
+                                        sCnpjCliente     : PAnsiChar;
+                                        iParcela         : Integer;
+                                        sCupom           : PAnsiChar;
+                                        sValor           : PAnsiChar;
+                                        sNsu             : PAnsiChar;
+                                        sData            : PAnsiChar;
+                                        sNumeroPDV       : PAnsiChar;
+                                        sCodigoLoja      : PAnsiChar;
+                                        sTipoComunicacao : Integer;
+                                        sParametro       : PAnsiChar
+                                        ): Integer;
+
+   function CancelarFluxoMCInterativo(): Integer;
+
+   //---------------------------------------------------------------------------
+implementation
+
+{ TMultiPlusTEF }
+
+function LoadDLL: THandle;
+begin
+  if not FileExists(CDLLTef) then
+    raise Exception.CreateFmt('DLL %s não encontrada.', [CDLLTef]);
+
+  Result := LoadLibrary(CDLLTef);
+  if Result = 0 then
+    raise Exception.CreateFmt('Não foi possível carregar a DLL %s', [CDLLTef]);
+end;
+
+function IniciaFuncaoMCInterativo( iComando         : Integer;
+                                  sCnpjCliente     : PAnsiChar;
+                                  iParcela         : Integer;
+                                  sCupom           : PAnsiChar;
+                                  sValor           : PAnsiChar;
+                                  sNsu             : PAnsiChar;
+                                  sData            : PAnsiChar;
+                                  sNumeroPDV       : PAnsiChar;
+                                  sCodigoLoja      : PAnsiChar;
+                                  sTipoComunicacao : Integer;
+                                  sParametro       : PAnsiChar
+                                  ): Integer;
+var
+   LHandle  : THandle;
+   LDLLFunc : TFuncIniciaFuncaoMCInterativo;
+begin
+   LHandle  := LoadDLL;
+   LDLLFunc := GetProcAddress(LHandle, 'IniciaFuncaoMCInterativo');
+   if @LDLLFunc = nil then
+      raise Exception.Create('Não foi possível carregar a função IniciaFuncaoMCInterativo');
+
+    Result := LDLLFunc(iComando, sCnpjCliente, iParcela, sCupom, sValor, sNsu, sData, sNumeroPdv, sCodigoLoja,
+       sTipoComunicacao, sParametro);
+end;
+
+function AguardaFuncaoMCInterativo: PAnsiChar;
+var
+  LHandle  : THandle;
+  LDLLFunc : TFuncAguardaFuncaoMCInterativo;
+begin
+  LHandle  := LoadDLL;
+  LDLLFunc := GetProcAddress(LHandle, 'AguardaFuncaoMCInterativo');
+  if @LDLLFunc = nil then
+    raise Exception.Create('Não foi possível carregar a função AguardaFuncaoMCInterativo');
+   Result := LDLLFunc;
+end;
+
+function ContinuaFuncaoMCInterativo(sInformacao: PAnsiChar): Integer;
+var
+   LHandle  : THandle;
+   LDLLFunc : TFuncContinuaFuncaoMCInterativo;
+begin
+   LHandle  := LoadDLL;
+   LDLLFunc := GetProcAddress(LHandle, 'ContinuaFuncaoMCInterativo');
+   if @LDLLFunc = nil then
+     raise Exception.Create('Não foi possível carregar a função ContinuaFuncaoMCInterativo');
+
+   Result := LDLLFunc(sInformacao);
+end;
 
 function FinalizaFuncaoMCInterativo( iComando         : Integer;
                                      sCnpjCliente     : PAnsiChar;
@@ -209,14 +328,31 @@ function FinalizaFuncaoMCInterativo( iComando         : Integer;
                                      sCodigoLoja      : PAnsiChar;
                                      sTipoComunicacao : Integer;
                                      sParametro       : PAnsiChar
-                                     ): Integer; stdcall;  external 'TefClientmc.dll';
+                                     ): Integer;
+var
+   LHandle  : THandle;
+   LDLLFunc : TFuncFinalizaFuncaoMCInterativo;
+begin
+   LHandle  := LoadDLL;
+   LDLLFunc := GetProcAddress(LHandle, 'FinalizaFuncaoMCInterativo');
+   if @LDLLFunc = nil then
+      raise Exception.Create('Não foi possível carregar a função FinalizaFuncaoMCInterativo');
 
-function CancelarFluxoMCInterativo(): Integer; stdcall;  external 'TefClientmc.dll';
+   Result := LDLLFunc(iComando, sCnpjCliente, iParcela, sCupom, sValor, sNsu, sData, sNumeroPDV, sCodigoLoja, sTipoComunicacao,
+      sParametro);
+end;
 
-   //---------------------------------------------------------------------------
-implementation
-
-{ TMultiPlusTEF }
+function CancelarFluxoMCInterativo(): Integer;
+var
+   LHandle  : THandle;
+   LDLLFunc : TFuncCancelarFluxoMCInterativo;
+begin
+   LHandle  := LoadDLL;
+   LDLLFunc := GetProcAddress(LHandle, 'CancelarFluxoMCInterativo');
+   if @LDLLFunc = nil then
+      raise Exception.Create('Não foi possível carregar a função CancelarFluxoMCInterativo');
+   Result := LDLLFunc;
+end;
 
 constructor TMultiPlusTEF.Create;
 begin
@@ -290,7 +426,7 @@ begin
       Comando := 5;
       if LTpOperacaoTEF=tpMPlPIX then
          Comando := 54;
-      SA_SalvarLog('REALIZAR CANCELAMENTO','R$:'+vlTransformado+' FORMA Pgto.:'+LForma+' NSU:'+LNSU+' Cupom Nr.:'+LCupom.ToString+' Tipo Cartao:'+SA_TpCartaoOperacaoTEFtoSTR(LTpOperacaoTEF)+' Parcelas:'+LParcela.ToString);
+      SA_SalvarLog('REALIZAR CANCELAMENTO','R$:'+vlTransformado+' FORMA Pgto.:'+LForma+' NSU:'+LNSU+' Cupom Nr.:'+LCupom.ToString+' Tipo Cartao:'+SA_TpCartaoOperacaoTEFtoSTR(LTpOperacaoTEF)+' Parcelas:'+LParcela.ToString,GetCurrentDir+'\TEF_Log\logTEFMPL'+formatdatetime('yyyymmdd',date)+'.txt',LSalvarLog);
       IRetorno := IniciaFuncaoMCInterativo(comando,
                                            PAnsiChar(AnsiString(LCNPJ)),
                                            LParcela,
@@ -321,7 +457,7 @@ begin
                         //  acao = TPRetornoMultiPlus e de acordo com o retorno deverá ser executado um processo
                         // TPRetornoMultiPlus = (TPMultiPlusMENU , TPMultiPlusMSG , TPMultiPlusPERGUNTA , TPMultiPlusRETORNO , TPMultiPlusERROABORTAR , TPMultiPlusERRODISPLAY,TPMultiPlusINDEFINIDO);
                         //------------------------------------------------------
-                        SA_SalvarLog('RESPOSTA AguardaFuncaoMCInterativo',SRetorno);  // Salvar LOG - Se ativado
+                        SA_SalvarLog('RESPOSTA AguardaFuncaoMCInterativo',SRetorno,GetCurrentDir+'\TEF_Log\logTEFMPL'+formatdatetime('yyyymmdd',date)+'.txt',LSalvarLog);  // Salvar LOG - Se ativado
                         //------------------------------------------------------
                         acao     := SA_MultiPlusTPRetorno(SRetorno);
                         //------------------------------------------------------
@@ -380,13 +516,13 @@ begin
                                     //------------------------------------------
                                     //   Enviar a coleta do item do menu para a DLL
                                     //------------------------------------------
-                                    SA_SalvarLog('ENVIAR OPCAO MENU ContinuaFuncaoMCInterativo',pergunta.Titulo+' = '+opcaoColeta.ToString);  // Salvar LOG - Se ativado
+                                    SA_SalvarLog('ENVIAR OPCAO MENU ContinuaFuncaoMCInterativo',pergunta.Titulo+' = '+opcaoColeta.ToString,GetCurrentDir+'\TEF_Log\logTEFMPL'+formatdatetime('yyyymmdd',date)+'.txt',LSalvarLog);  // Salvar LOG - Se ativado
                                     CRetorno := ContinuaFuncaoMCInterativo(PAnsiChar(AnsiString(opcaoColeta.ToString)));
                                     if CRetorno<>0 then // Houve um erro ao enviar o dado
                                        begin
                                           //------------------------------------
                                           frmwebtef.mensagem := SA_RetornoErro(CRetorno);
-                                          SA_SalvarLog('ERRO ENVIAR OPCAO MENU ContinuaFuncaoMCInterativo',CRetorno.ToString+' '+frmwebtef.mensagem);  // Salvar LOG - Se ativado
+                                          SA_SalvarLog('ERRO ENVIAR OPCAO MENU ContinuaFuncaoMCInterativo',CRetorno.ToString+' '+frmwebtef.mensagem,GetCurrentDir+'\TEF_Log\logTEFMPL'+formatdatetime('yyyymmdd',date)+'.txt',LSalvarLog);  // Salvar LOG - Se ativado
                                           TThread.Synchronize(TThread.CurrentThread,SA_MostramensagemT);
                                           //------------------------------------
                                           TThread.Synchronize(TThread.CurrentThread,SA_MostrarBtCancelarT);   // Ativar o botão cancelar na tela de TEF
@@ -454,13 +590,13 @@ begin
                               if not frmwebtef.Cancelar then
                                  begin
                                     pergunta.ValorColetado := SA_FormatarRespostaPergunta(pergunta,frmwebtef.dado_digitado);  // Formatar o dado coletado para enviar para a DLL
-                                    SA_SalvarLog('ENVIAR DADO DA PERGUNTA ContinuaFuncaoMCInterativo',pergunta.Titulo+' = '+frmwebtef.dado_digitado);  // Salvar LOG - Se ativado
+                                    SA_SalvarLog('ENVIAR DADO DA PERGUNTA ContinuaFuncaoMCInterativo',pergunta.Titulo+' = '+frmwebtef.dado_digitado,GetCurrentDir+'\TEF_Log\logTEFMPL'+formatdatetime('yyyymmdd',date)+'.txt',LSalvarLog);  // Salvar LOG - Se ativado
                                     CRetorno := ContinuaFuncaoMCInterativo(PAnsiChar(AnsiString(pergunta.ValorColetado))); // Enviar o dado coletado
                                     if CRetorno<>0 then // Houve um erro ao enviar o dado
                                        begin
                                           //------------------------------------
                                           frmwebtef.mensagem := SA_RetornoErro(CRetorno);
-                                          SA_SalvarLog('ERRO ENVIAR DADO DA PERGUNTA ContinuaFuncaoMCInterativo',pergunta.Titulo+' = '+frmwebtef.dado_digitado + ' ' + frmwebtef.mensagem);  // Salvar LOG - Se ativado
+                                          SA_SalvarLog('ERRO ENVIAR DADO DA PERGUNTA ContinuaFuncaoMCInterativo',pergunta.Titulo+' = '+frmwebtef.dado_digitado + ' ' + frmwebtef.mensagem,GetCurrentDir+'\TEF_Log\logTEFMPL'+formatdatetime('yyyymmdd',date)+'.txt',LSalvarLog);  // Salvar LOG - Se ativado
                                           TThread.Synchronize(TThread.CurrentThread,SA_MostramensagemT);
                                           //------------------------------------
                                           TThread.Synchronize(TThread.CurrentThread,SA_MostrarBtCancelarT);   // Ativar o botão cancelar na tela de TEF
@@ -501,7 +637,7 @@ begin
                                                                                                  ' Data:'+formatdatetime('yyyyMMdd',date)+
                                                                                                  ' PDV:'+LPdv+
                                                                                                  ' Cod.Loja:'+LCodigoLoja+
-                                                                                                 ' CNPJ:'+LCNPJ+' Tentativa Nr. '+qtdetentativasfinalizar.tostring);  // Salvar LOG - Se ativado
+                                                                                                 ' CNPJ:'+LCNPJ+' Tentativa Nr. '+qtdetentativasfinalizar.tostring,GetCurrentDir+'\TEF_Log\logTEFMPL'+formatdatetime('yyyymmdd',date)+'.txt',LSalvarLog);  // Salvar LOG - Se ativado
                                     try
                                         //--------------------------------------------
                                         // Enviando a confirmação da transação
@@ -518,11 +654,11 @@ begin
                                                                                0,
                                                                                '');
                                         //--------------------------------------------
-                                        SA_SalvarLog('RETORNO ENVIAR CONFIRMACAO CANCELAMENTO FinalizaFuncaoMCInterativo',cretorno.ToString+' Retorno OK (função foi executada sem erros)');
+                                        SA_SalvarLog('RETORNO ENVIAR CONFIRMACAO CANCELAMENTO FinalizaFuncaoMCInterativo',cretorno.ToString+' Retorno OK (função foi executada sem erros)',GetCurrentDir+'\TEF_Log\logTEFMPL'+formatdatetime('yyyymmdd',date)+'.txt',LSalvarLog);
                                         //--------------------------------------------
                                     except on e:exception do
                                        begin
-                                          SA_SalvarLog('ERRO ENVIAR CONFIRMACAO FinalizaFuncaoMCInterativo',e.Message);
+                                          SA_SalvarLog('ERRO ENVIAR CONFIRMACAO FinalizaFuncaoMCInterativo',e.Message,GetCurrentDir+'\TEF_Log\logTEFMPL'+formatdatetime('yyyymmdd',date)+'.txt',LSalvarLog);
                                        end;
                                     end;
                                     //------------------------------------------
@@ -651,7 +787,7 @@ begin
                                     //   Tratar a falha da confirmação
                                     //------------------------------------------
                                     frmwebtef.mensagem := SA_RetornoErro(CRetorno);
-                                    SA_SalvarLog('ERRO ENVIAR CONFIRMACAO FinalizaFuncaoMCInterativo',CRetorno.ToString+' '+SA_RetornoErro(CRetorno));  // Salvar LOG - Se ativado
+                                    SA_SalvarLog('ERRO ENVIAR CONFIRMACAO FinalizaFuncaoMCInterativo',CRetorno.ToString+' '+SA_RetornoErro(CRetorno),GetCurrentDir+'\TEF_Log\logTEFMPL'+formatdatetime('yyyymmdd',date)+'.txt',LSalvarLog);  // Salvar LOG - Se ativado
                                     TThread.Synchronize(TThread.CurrentThread,SA_MostramensagemT);
                                     //------------------------------------
                                     TThread.Synchronize(TThread.CurrentThread,SA_MostrarBtCancelarT);   // Ativar o botão cancelar na tela de TEF
@@ -677,7 +813,7 @@ begin
             //  Ocorreu um erro
             //------------------------------------------------------------------
             CancelarFluxoMCInterativo;
-            SA_SalvarLog('RESPOSTA REALIZAR CANCELAMENTO',SA_RetornoErro(IRetorno));
+            SA_SalvarLog('RESPOSTA REALIZAR CANCELAMENTO',SA_RetornoErro(IRetorno),GetCurrentDir+'\TEF_Log\logTEFMPL'+formatdatetime('yyyymmdd',date)+'.txt',LSalvarLog);
             frmwebtef.mensagem := SA_RetornoErro(IRetorno);
             //------------------------------------------------------------------
             TThread.Synchronize(TThread.CurrentThread,SA_MostramensagemT);
@@ -948,7 +1084,7 @@ begin
       PintarQRCode(QRCode, frmwebtef.logomp.Picture.Bitmap, qrUTF8BOM);
    except on e:exception do
       begin
-         SA_SalvarLog('ERRO PINTAR PIX NA TELA',e.Message);
+         SA_SalvarLog('ERRO PINTAR PIX NA TELA',e.Message,GetCurrentDir+'\TEF_Log\logTEFMPL'+formatdatetime('yyyymmdd',date)+'.txt',LSalvarLog);
       end
    end;
    //---------------------------------------------------------------------------
@@ -968,7 +1104,7 @@ begin
             PinPad.IsEnabled   := false;
          except on e:exception do
             begin
-               SA_SalvarLog('ERRO PINTAR PIX NA NO PINPAD',e.Message);
+               SA_SalvarLog('ERRO PINTAR PIX NA NO PINPAD',e.Message,GetCurrentDir+'\TEF_Log\logTEFMPL'+formatdatetime('yyyymmdd',date)+'.txt',LSalvarLog);
             end
 
          end;
@@ -1035,7 +1171,7 @@ begin
                                         ' NSU:'+LNSU+
                                         ' Cupom Nr.:'+LCupom.ToString+
                                         ' Tipo Cartao:'+SA_TpCartaoOperacaoTEFtoSTR(LTpOperacaoTEF)+
-                                        ' Parcelas:'+LParcela.ToString);
+                                        ' Parcelas:'+LParcela.ToString,GetCurrentDir+'\TEF_Log\logTEFMPL'+formatdatetime('yyyymmdd',date)+'.txt',LSalvarLog);
 
       IRetorno := IniciaFuncaoMCInterativo(SA_TpCartaoOperacaoTEFtoINT(LTpOperacaoTEF),
                                            PAnsiChar(AnsiString(LCNPJ)),
@@ -1076,7 +1212,7 @@ begin
                                                           ' NSU:'+DadosPix.NSU+
                                                           ' Cupom Nr.:'+LCupom.ToString+
                                                           ' Tipo Cartao:'+SA_TpCartaoOperacaoTEFtoSTR(LTpOperacaoTEF)+
-                                                          ' Parcelas:'+LParcela.ToString);
+                                                          ' Parcelas:'+LParcela.ToString,GetCurrentDir+'\TEF_Log\logTEFMPL'+formatdatetime('yyyymmdd',date)+'.txt',LSalvarLog);
                         //------------------------------------------------------
                         FinalizaFuncaoMCInterativo(55,
                                                    PAnsiChar(AnsiString(LCNPJ)),
@@ -1098,7 +1234,7 @@ begin
                      SRetorno := widestring(AguardaFuncaoMCInterativo());
                   except on e:exception do
                      begin
-                        SA_SalvarLog('ERRO AguardaFuncaoMCInterativo',e.Message);  // Salvar LOG - Se ativado
+                        SA_SalvarLog('ERRO AguardaFuncaoMCInterativo',e.Message,GetCurrentDir+'\TEF_Log\logTEFMPL'+formatdatetime('yyyymmdd',date)+'.txt',LSalvarLog);  // Salvar LOG - Se ativado
                      end;
                   end;
                   if SRetorno<>'' then   // Se o retorno não é vazio, verificar que tipo de retorno
@@ -1107,7 +1243,7 @@ begin
                         //  acao = TPRetornoMultiPlus e de acordo com o retorno deverá ser executado um processo
                         // TPRetornoMultiPlus = (TPMultiPlusMENU , TPMultiPlusMSG , TPMultiPlusPERGUNTA , TPMultiPlusRETORNO , TPMultiPlusERROABORTAR , TPMultiPlusERRODISPLAY,TPMultiPlusINDEFINIDO);
                         //------------------------------------------------------
-                        SA_SalvarLog('RESPOSTA AguardaFuncaoMCInterativo',SRetorno);  // Salvar LOG - Se ativado
+                        SA_SalvarLog('RESPOSTA AguardaFuncaoMCInterativo',SRetorno,GetCurrentDir+'\TEF_Log\logTEFMPL'+formatdatetime('yyyymmdd',date)+'.txt',LSalvarLog);  // Salvar LOG - Se ativado
                         //------------------------------------------------------
                         acao     := SA_MultiPlusTPRetorno(SRetorno);
                         //------------------------------------------------------
@@ -1120,7 +1256,7 @@ begin
                               if (pos('NSU=',RetornoMsg)>0) and (pos('|ORIGEM=',RetornoMsg)>0) and (pos('|QRCODE=',RetornoMsg)>0) then
                                  begin
                                     DadosPix := SA_ExtrairDadosPIX(RetornoMsg);
-                                    SA_SalvarLog('QRCODE OBTIDO',DadosPix.QRCODE);  // Salvar LOG - Se ativado
+                                    SA_SalvarLog('QRCODE OBTIDO',DadosPix.QRCODE,GetCurrentDir+'\TEF_Log\logTEFMPL'+formatdatetime('yyyymmdd',date)+'.txt',LSalvarLog);  // Salvar LOG - Se ativado
                                     TThread.Synchronize(TThread.CurrentThread,SA_MostrarBtCancelarT);   // Ativar o botão cancelar na tela de TEF
                                     TThread.Synchronize(TThread.CurrentThread,
                                        procedure
@@ -1183,13 +1319,13 @@ begin
                                     //------------------------------------------
                                     //   Enviar a coleta do item do menu para a DLL
                                     //------------------------------------------
-                                    SA_SalvarLog('ENVIAR OPCAO MENU ContinuaFuncaoMCInterativo',pergunta.Titulo+' = '+opcaoColeta.ToString);  // Salvar LOG - Se ativado
+                                    SA_SalvarLog('ENVIAR OPCAO MENU ContinuaFuncaoMCInterativo',pergunta.Titulo+' = '+opcaoColeta.ToString,GetCurrentDir+'\TEF_Log\logTEFMPL'+formatdatetime('yyyymmdd',date)+'.txt',LSalvarLog);  // Salvar LOG - Se ativado
                                     CRetorno := ContinuaFuncaoMCInterativo(PAnsiChar(AnsiString(opcaoColeta.ToString)));
                                     if CRetorno<>0 then // Houve um erro ao enviar o dado
                                        begin
                                           //------------------------------------
                                           frmwebtef.mensagem := SA_RetornoErro(CRetorno);
-                                          SA_SalvarLog('ERRO ENVIAR OPCAO MENU ContinuaFuncaoMCInterativo',CRetorno.ToString+' '+frmwebtef.mensagem);  // Salvar LOG - Se ativado
+                                          SA_SalvarLog('ERRO ENVIAR OPCAO MENU ContinuaFuncaoMCInterativo',CRetorno.ToString+' '+frmwebtef.mensagem,GetCurrentDir+'\TEF_Log\logTEFMPL'+formatdatetime('yyyymmdd',date)+'.txt',LSalvarLog);  // Salvar LOG - Se ativado
                                           TThread.Synchronize(TThread.CurrentThread,SA_MostramensagemT);
                                           //------------------------------------
                                           TThread.Synchronize(TThread.CurrentThread,SA_MostrarBtCancelarT);   // Ativar o botão cancelar na tela de TEF
@@ -1267,13 +1403,13 @@ begin
                               if not frmwebtef.Cancelar then
                                  begin
                                     pergunta.ValorColetado := SA_FormatarRespostaPergunta(pergunta,Resposta_pergunta);  // Formatar o dado coletado para enviar para a DLL
-                                    SA_SalvarLog('ENVIAR DADO DA PERGUNTA ContinuaFuncaoMCInterativo',pergunta.Titulo+' = '+pergunta.ValorColetado);  // Salvar LOG - Se ativado
+                                    SA_SalvarLog('ENVIAR DADO DA PERGUNTA ContinuaFuncaoMCInterativo',pergunta.Titulo+' = '+pergunta.ValorColetado,GetCurrentDir+'\TEF_Log\logTEFMPL'+formatdatetime('yyyymmdd',date)+'.txt',LSalvarLog);  // Salvar LOG - Se ativado
                                     CRetorno := ContinuaFuncaoMCInterativo(PAnsiChar(AnsiString(pergunta.ValorColetado))); // Enviar o dado coletado
                                     if CRetorno<>0 then // Houve um erro ao enviar o dado
                                        begin
                                           //------------------------------------
                                           frmwebtef.mensagem := SA_RetornoErro(CRetorno);
-                                          SA_SalvarLog('ERRO ENVIAR DADO DA PERGUNTA ContinuaFuncaoMCInterativo',pergunta.Titulo+' = '+frmwebtef.dado_digitado + ' ' + frmwebtef.mensagem);  // Salvar LOG - Se ativado
+                                          SA_SalvarLog('ERRO ENVIAR DADO DA PERGUNTA ContinuaFuncaoMCInterativo',pergunta.Titulo+' = '+frmwebtef.dado_digitado + ' ' + frmwebtef.mensagem,GetCurrentDir+'\TEF_Log\logTEFMPL'+formatdatetime('yyyymmdd',date)+'.txt',LSalvarLog);  // Salvar LOG - Se ativado
                                           TThread.Synchronize(TThread.CurrentThread,SA_MostramensagemT);
                                           //------------------------------------
                                           TThread.Synchronize(TThread.CurrentThread,SA_MostrarBtCancelarT);   // Ativar o botão cancelar na tela de TEF
@@ -1315,7 +1451,7 @@ begin
                                                                                                  ' Data:'+formatdatetime('yyyyMMdd',date)+
                                                                                                  ' PDV:'+LPdv+
                                                                                                  ' Cod.Loja:'+LCodigoLoja+
-                                                                                                 ' CNPJ:'+LCNPJ+' Tentativa Nr. '+qtdetentativasfinalizar.tostring);  // Salvar LOG - Se ativado
+                                                                                                 ' CNPJ:'+LCNPJ+' Tentativa Nr. '+qtdetentativasfinalizar.tostring,GetCurrentDir+'\TEF_Log\logTEFMPL'+formatdatetime('yyyymmdd',date)+'.txt',LSalvarLog);  // Salvar LOG - Se ativado
                                     try
                                         //--------------------------------------------
                                         // Enviando a confirmação da transação
@@ -1332,11 +1468,11 @@ begin
                                                                                0,
                                                                                '');
                                         //--------------------------------------------
-                                        SA_SalvarLog('RETORNO ENVIAR CONFIRMACAO FinalizaFuncaoMCInterativo',cretorno.ToString+' Retorno OK (função foi executada sem erros)');
+                                        SA_SalvarLog('RETORNO ENVIAR CONFIRMACAO FinalizaFuncaoMCInterativo',cretorno.ToString+' Retorno OK (função foi executada sem erros)',GetCurrentDir+'\TEF_Log\logTEFMPL'+formatdatetime('yyyymmdd',date)+'.txt',LSalvarLog);
                                         //--------------------------------------------
                                     except on e:exception do
                                        begin
-                                          SA_SalvarLog('ERRO ENVIAR CONFIRMACAO FinalizaFuncaoMCInterativo',e.Message);
+                                          SA_SalvarLog('ERRO ENVIAR CONFIRMACAO FinalizaFuncaoMCInterativo',e.Message,GetCurrentDir+'\TEF_Log\logTEFMPL'+formatdatetime('yyyymmdd',date)+'.txt',LSalvarLog);
                                        end;
                                     end;
                                     //------------------------------------------
@@ -1466,7 +1602,7 @@ begin
                                     //   Tratar a falha da confirmação
                                     //------------------------------------------
                                     frmwebtef.mensagem := SA_RetornoErro(CRetorno);
-                                    SA_SalvarLog('ERRO ENVIAR CONFIRMACAO FinalizaFuncaoMCInterativo',CRetorno.ToString+' '+SA_RetornoErro(CRetorno));  // Salvar LOG - Se ativado
+                                    SA_SalvarLog('ERRO ENVIAR CONFIRMACAO FinalizaFuncaoMCInterativo',CRetorno.ToString+' '+SA_RetornoErro(CRetorno),GetCurrentDir+'\TEF_Log\logTEFMPL'+formatdatetime('yyyymmdd',date)+'.txt',LSalvarLog);  // Salvar LOG - Se ativado
                                     TThread.Synchronize(TThread.CurrentThread,SA_MostramensagemT);
                                     //------------------------------------
                                     TThread.Synchronize(TThread.CurrentThread,SA_MostrarBtCancelarT);   // Ativar o botão cancelar na tela de TEF
@@ -1495,7 +1631,7 @@ begin
             if (acao=TPMultiPlusERROABORTAR) or (acao=TPMultiPlusERRODISPLAY) or ((acao=TPMultiPlusMENU) and (opcaoColeta=-1)) or ((acao=TPMultiPlusPERGUNTA) and (Resposta_pergunta='')) then
                begin
                   FRetorno := CancelarFluxoMCInterativo;
-                  SA_SalvarLog('RESPOSTA CancelarFluxoMCInterativo',FRetorno.ToString+' = '+SA_RetornoErro(FRetorno));
+                  SA_SalvarLog('RESPOSTA CancelarFluxoMCInterativo',FRetorno.ToString+' = '+SA_RetornoErro(FRetorno),GetCurrentDir+'\TEF_Log\logTEFMPL'+formatdatetime('yyyymmdd',date)+'.txt',LSalvarLog);
                end;
 
             //------------------------------------------------------------------
@@ -1506,7 +1642,7 @@ begin
             //  Ocorreu um erro
             //------------------------------------------------------------------
             CancelarFluxoMCInterativo;
-            SA_SalvarLog('RESPOSTA REALIZAR PAGAMENTO',SA_RetornoErro(IRetorno));
+            SA_SalvarLog('RESPOSTA REALIZAR PAGAMENTO',SA_RetornoErro(IRetorno),GetCurrentDir+'\TEF_Log\logTEFMPL'+formatdatetime('yyyymmdd',date)+'.txt',LSalvarLog);
             frmwebtef.mensagem := SA_RetornoErro(IRetorno);
             //------------------------------------------------------------------
             TThread.Synchronize(TThread.CurrentThread,SA_MostramensagemT);
@@ -1558,14 +1694,6 @@ begin
       48:Result := 'Não houve confirmação da conclusão da execução do ClientD';
       49:Result := 'Número de parcelas inválido';
    end;
-end;
-
-procedure TMultiPlusTEF.SA_SalvarLog(titulo, dado: string);
-begin
-   if LSalvarLog then
-      SA_Salva_Arquivo_Incremental(titulo + ' ' +
-                                   formatdatetime('dd/mm/yyyy hh:mm:ss',now)+#13+dado,
-                                   GetCurrentDir+'\TEF_Log\logTEFMPL'+formatdatetime('yyyymmdd',date)+'.txt');
 end;
 
 //------------------------------------------------------------------------------
@@ -1873,7 +2001,7 @@ begin
    except on e:exception do
       begin
          Result := false;
-         SA_SalvarLog('ERRO VALIDACAO DO TIPO DE DADO',e.Message);
+         SA_SalvarLog('ERRO VALIDACAO DO TIPO DE DADO',e.Message,GetCurrentDir+'\TEF_Log\logTEFMPL'+formatdatetime('yyyymmdd',date)+'.txt',LSalvarLog);
       end;
    end;
    //---------------------------------------------------------------------------

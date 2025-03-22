@@ -97,7 +97,6 @@ type
          procedure SA_MostrarBtCancelarT;
          procedure SA_DesativarBtCancelarT;
          procedure SA_DesativarMenuT;
-         procedure SA_SalvarLog(titulo,dado: string);
          //---------------------------------------------------------------------
          function SA_OpcoesPagamento:TStringList;
          function SA_ItemMenuPgtoSelecionado(item:integer):TtpEmbedIFormaPgto;
@@ -191,11 +190,11 @@ var
    Retorno : string;
 begin
    //---------------------------------------------------------------------------
-   SA_SalvarLog('ABORTAR OPERACAO','{"processar": {"operacao": "abortar"}}');
+   SA_SalvarLog('ABORTAR OPERACAO','{"processar": {"operacao": "abortar"}}',GetCurrentDir+'\TEF_Log\logTEFEMBED'+formatdatetime('yyyymmdd',date)+'.txt',LSalvarLog);
    //---------------------------------------------------------------------------
-   Retorno := lib.Processar(ansistring('{"processar": {"operacao": "abortar"}}'));
+   Retorno := string(lib.Processar(ansistring('{"processar": {"operacao": "abortar"}}')));
    //---------------------------------------------------------------------------
-   SA_SalvarLog('RESPOSTA ABORTAR OPERACAO',Retorno);
+   SA_SalvarLog('RESPOSTA ABORTAR OPERACAO',Retorno,GetCurrentDir+'\TEF_Log\logTEFEMBED'+formatdatetime('yyyymmdd',date)+'.txt',LSalvarLog);
    //---------------------------------------------------------------------------
    Result  := SA_ParsingResposta(Retorno);
    //---------------------------------------------------------------------------
@@ -215,11 +214,11 @@ begin
                    '}'+
                '}';
    //---------------------------------------------------------------------------
-   SA_SalvarLog('SOLICITANDO CANCELAMENTO',Input);
+   SA_SalvarLog('SOLICITANDO CANCELAMENTO',Input,GetCurrentDir+'\TEF_Log\logTEFEMBED'+formatdatetime('yyyymmdd',date)+'.txt',LSalvarLog);
    //---------------------------------------------------------------------------
-   Retorno := lib.Processar(ansistring(Input));
+   Retorno := string(lib.Processar(ansistring(Input)));
    //---------------------------------------------------------------------------
-   SA_SalvarLog('RESPOSTA CANCELAMENTO',Retorno);
+   SA_SalvarLog('RESPOSTA CANCELAMENTO',Retorno,GetCurrentDir+'\TEF_Log\logTEFEMBED'+formatdatetime('yyyymmdd',date)+'.txt',LSalvarLog);
    //---------------------------------------------------------------------------
    Result  := SA_ParsingResposta(Retorno);
    //---------------------------------------------------------------------------
@@ -271,11 +270,11 @@ begin
                   '}';
       end;
    //---------------------------------------------------------------------------
-   SA_SalvarLog('CONFIGURANDO O TEF',Input);
+   SA_SalvarLog('CONFIGURANDO O TEF',Input,GetCurrentDir+'\TEF_Log\logTEFEMBED'+formatdatetime('yyyymmdd',date)+'.txt',LSalvarLog);
    //---------------------------------------------------------------------------
-   Retorno := lib.Configurar(ansistring(Input));
+   Retorno := string(lib.Configurar(ansistring(Input)));
    //---------------------------------------------------------------------------
-   SA_SalvarLog('RESPOSTA CONFIGURANDO O TEF',Retorno);
+   SA_SalvarLog('RESPOSTA CONFIGURANDO O TEF',Retorno,GetCurrentDir+'\TEF_Log\logTEFEMBED'+formatdatetime('yyyymmdd',date)+'.txt',LSalvarLog);
    //---------------------------------------------------------------------------
    Result  := SA_ParsingResposta(Retorno);
    //---------------------------------------------------------------------------
@@ -325,12 +324,12 @@ begin
 
       end;
    //---------------------------------------------------------------------------
-   SA_SalvarLog('PAGAMENTO CREDITO',Input);
+   SA_SalvarLog('PAGAMENTO CREDITO',Input,GetCurrentDir+'\TEF_Log\logTEFEMBED'+formatdatetime('yyyymmdd',date)+'.txt',LSalvarLog);
    //---------------------------------------------------------------------------
-   Retorno := lib.Processar(ansistring(Input));
+   Retorno := string(lib.Processar(ansistring(Input)));
    Result  := SA_ParsingResposta(Retorno);
    //---------------------------------------------------------------------------
-   SA_SalvarLog('RESPOSTA PAGAMENTO CREDITO',Retorno);
+   SA_SalvarLog('RESPOSTA PAGAMENTO CREDITO',Retorno,GetCurrentDir+'\TEF_Log\logTEFEMBED'+formatdatetime('yyyymmdd',date)+'.txt',LSalvarLog);
    //---------------------------------------------------------------------------
 end;
 
@@ -352,11 +351,11 @@ begin
                 '}'+
             '}';
    //---------------------------------------------------------------------------
-   SA_SalvarLog('VENDA DEBITO',Input);
+   SA_SalvarLog('VENDA DEBITO',Input,GetCurrentDir+'\TEF_Log\logTEFEMBED'+formatdatetime('yyyymmdd',date)+'.txt',LSalvarLog);
    //---------------------------------------------------------------------------
-   Retorno := lib.Processar(ansistring(Input));
+   Retorno := string(lib.Processar(ansistring(Input)));
    //---------------------------------------------------------------------------
-   SA_SalvarLog('RESPOSTA VENDA DEBITO',Retorno);
+   SA_SalvarLog('RESPOSTA VENDA DEBITO',Retorno,GetCurrentDir+'\TEF_Log\logTEFEMBED'+formatdatetime('yyyymmdd',date)+'.txt',LSalvarLog);
    //---------------------------------------------------------------------------
    Result  := SA_ParsingResposta(Retorno);
    //---------------------------------------------------------------------------
@@ -384,11 +383,11 @@ begin
                    '}'+
                '}';
    //---------------------------------------------------------------------------
-   SA_SalvarLog('FINALIZAR',input);
+   SA_SalvarLog('FINALIZAR',input,GetCurrentDir+'\TEF_Log\logTEFEMBED'+formatdatetime('yyyymmdd',date)+'.txt',LSalvarLog);
    //---------------------------------------------------------------------------
-   Retorno := lib.Finalizar(ansistring(Input));
+   Retorno := string(lib.Finalizar(ansistring(Input)));
    //---------------------------------------------------------------------------
-   SA_SalvarLog('RESPOSTA FINALIZAR',Retorno);
+   SA_SalvarLog('RESPOSTA FINALIZAR',Retorno,GetCurrentDir+'\TEF_Log\logTEFEMBED'+formatdatetime('yyyymmdd',date)+'.txt',LSalvarLog);
    //---------------------------------------------------------------------------
    Result  := SA_ParsingResposta(Retorno);
    //---------------------------------------------------------------------------
@@ -414,11 +413,11 @@ begin
    else if LTipoTEF=EmbedPOS then  // A operação é POS
       Input := '{"finalizar": {"operacao": ""}}';
    //---------------------------------------------------------------------------
-   SA_SalvarLog('FINALIZAR',input);
+   SA_SalvarLog('FINALIZAR',input,GetCurrentDir+'\TEF_Log\logTEFEMBED'+formatdatetime('yyyymmdd',date)+'.txt',LSalvarLog);
    //---------------------------------------------------------------------------
-   Retorno := lib.Finalizar(ansistring(Input));
+   Retorno := string(lib.Finalizar(ansistring(Input)));
    //---------------------------------------------------------------------------
-   SA_SalvarLog('RESPOSTA FINALIZAR',Retorno);
+   SA_SalvarLog('RESPOSTA FINALIZAR',Retorno,GetCurrentDir+'\TEF_Log\logTEFEMBED'+formatdatetime('yyyymmdd',date)+'.txt',LSalvarLog);
    //---------------------------------------------------------------------------
    Result  := SA_ParsingResposta(Retorno);
    //---------------------------------------------------------------------------
@@ -429,8 +428,8 @@ var
    Retorno : String;
 begin
    //---------------------------------------------------------------------------
-   Retorno := lib.Processar('get_status');
-   SA_SalvarLog('RESPOSTA GetStatus',retorno);
+   Retorno := string(lib.Processar('get_status'));
+   SA_SalvarLog('RESPOSTA GetStatus',retorno,GetCurrentDir+'\TEF_Log\logTEFEMBED'+formatdatetime('yyyymmdd',date)+'.txt',LSalvarLog);
    //---------------------------------------------------------------------------
    Result  := SA_ParsingResposta(Retorno);
    //---------------------------------------------------------------------------
@@ -445,11 +444,11 @@ begin
    if LTipoTEF=EmbedPOS then  // Se o tipo for POS
       operacao := 'pos';
    //---------------------------------------------------------------------------
-   SA_SalvarLog('INICIANDO O TEF','{"iniciar": {"operacao": "'+operacao+'"}}');
+   SA_SalvarLog('INICIANDO O TEF','{"iniciar": {"operacao": "'+operacao+'"}}',GetCurrentDir+'\TEF_Log\logTEFEMBED'+formatdatetime('yyyymmdd',date)+'.txt',LSalvarLog);
    //---------------------------------------------------------------------------
-   Retorno := lib.Iniciar(ansistring('{"iniciar": {"operacao": "'+operacao+'"}}'));
+   Retorno := string(lib.Iniciar(ansistring('{"iniciar": {"operacao": "'+operacao+'"}}')));
    //---------------------------------------------------------------------------
-   SA_SalvarLog('RESPOSTA INICIAR O TEF',Retorno);
+   SA_SalvarLog('RESPOSTA INICIAR O TEF',Retorno,GetCurrentDir+'\TEF_Log\logTEFEMBED'+formatdatetime('yyyymmdd',date)+'.txt',LSalvarLog);
    //---------------------------------------------------------------------------
    Result  := SA_ParsingResposta(Retorno);
    //---------------------------------------------------------------------------
@@ -1317,18 +1316,6 @@ begin
    Mythread.start;
    //---------------------------------------------------------------------------
 end;
-
-procedure TEmbedIT.SA_SalvarLog(titulo, dado: string);
-begin
-   //---------------------------------------------------------------------------
-   if LTipoTEF=EmbedPOS then   // Se o tipo de operação for POS, incluir a palavra (POS) no LOG
-      titulo := titulo + '(POS)';
-   //---------------------------------------------------------------------------
-   if LSalvarLog then
-      SA_Salva_Arquivo_Incremental(titulo + ' ' + formatdatetime('dd/mm/yyyy hh:mm:ss',now)+#13+dado,GetCurrentDir+'\TEF_Log\logTEFEMBED'+formatdatetime('yyyymmdd',date)+'.txt');
-   //---------------------------------------------------------------------------
-end;
-
 
 
 end.
