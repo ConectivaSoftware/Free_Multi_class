@@ -1,0 +1,3 @@
+para a classe funcionar, adicione na library path do delphi
+\MULTICLASS\CLASSE
+\MULTICLASS\CLASSE\classes
