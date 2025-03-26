@@ -1,3 +1,11 @@
 para a classe funcionar, adicione na library path do delphi
 \MULTICLASS\CLASSE
 \MULTICLASS\CLASSE\classes
+
+
+tem dependencia do acbr
+https://svn.code.sf.net/p/acbr/code/trunk2
+
+
+tem dependencia do restrequest4d
+https://github.com/viniciussanchez/RESTRequest4Delphi
