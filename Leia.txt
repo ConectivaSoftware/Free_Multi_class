@@ -1,6 +1,6 @@
 para a classe funcionar, adicione na library path do delphi
-\MULTICLASS\CLASSE
-\MULTICLASS\CLASSE\classes
+\FMulticlassSRC
+\RestRequest4d
 
 
 tem dependencia do acbr
@@ -9,3 +9,7 @@ https://svn.code.sf.net/p/acbr/code/trunk2
 
 tem dependencia do restrequest4d
 https://github.com/viniciussanchez/RESTRequest4Delphi
+
+A inclusao do Restrequest4d foi autorizada pelo Vinicius Sanches! Nosso muito obrigado!
+
+
